@@ -246,10 +246,71 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .coach-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .coach-text .coach-name { font-size: 0.8rem; color: var(--volt); font-weight: 800; letter-spacing: 0.02em; }
 .coach-handle { color: var(--muted); font-weight: 700; }
-.coach-text .coach-intro { margin: 0; font-weight: 700; font-size: 1.06rem; line-height: 1.3; }
+.coach-text .coach-intro { margin: 0; font-weight: 700; font-size: 0.98rem; line-height: 1.4; }
 .coach-note { position: relative; margin: 14px 0 0; color: var(--muted); font-size: 0.96rem; line-height: 1.5; }
 
-/* ---------- Dagdoel ---------- */
+/* ---------- Tracker (Virtuagym-stijl) ---------- */
+.tracker {
+  position: relative; overflow: hidden;
+  padding: 18px; border-radius: var(--radius-lg); border: 1px solid var(--line);
+  background: linear-gradient(150deg, rgba(255, 45, 120, 0.10), transparent 60%), var(--card);
+  margin-bottom: 18px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 34px rgba(0, 0, 0, 0.38);
+}
+.tracker.day-rest  { --dc: var(--violet); }
+.tracker.day-train { --dc: var(--volt); }
+
+.week-strip {
+  position: relative; display: flex; gap: 6px; margin-bottom: 18px;
+  padding: 2px 0 8px;
+}
+.day-pill {
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 0; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--bg-0); color: var(--muted); font-weight: 800;
+  transition: transform 0.16s var(--spring), background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.day-pill .dp-name { font-size: 0.84rem; letter-spacing: 0.02em; }
+.day-pill .dp-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pc, var(--muted)); }
+.day-pill.is-train { --pc: var(--volt); }
+.day-pill.is-rest  { --pc: var(--violet); }
+.day-pill:hover { border-color: color-mix(in srgb, var(--pc) 45%, transparent); }
+.day-pill:active { transform: scale(0.92); }
+.day-pill.on { color: var(--ink); border-color: transparent; }
+.day-pill.is-train.on { background: linear-gradient(160deg, var(--volt), var(--flame)); color: var(--volt-ink); box-shadow: 0 6px 16px rgba(255, 45, 120, 0.32); }
+.day-pill.is-rest.on  { background: linear-gradient(160deg, var(--azure), var(--violet)); color: #1c1024; box-shadow: 0 6px 16px rgba(185, 107, 255, 0.32); }
+.day-pill.on .dp-dot { background: rgba(0, 0, 0, 0.45); }
+.day-pill.done .dp-dot { width: 14px; height: 14px; background: var(--pc); display: grid; place-items: center; }
+.day-pill.done .dp-dot::after { content: "✓"; font-size: 0.62rem; font-weight: 900; color: var(--bg-0); line-height: 1; }
+.day-pill.on.done .dp-dot { background: rgba(0, 0, 0, 0.5); }
+.day-pill.on.done .dp-dot::after { color: #fff; }
+
+.tracker-main { position: relative; display: flex; align-items: center; gap: 18px; }
+.tracker .ring-wrap { width: 112px; height: 112px; }
+.tracker .ring-label strong { font-size: 1.55rem; }
+.tracker .ring-label span { font-size: 0.58rem; }
+
+.macro-bars { flex: 1; display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+.mbar-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; gap: 8px; }
+.mbar-lab { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.mbar-val { font-size: 0.76rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.mbar-track { height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.09); overflow: hidden; }
+.mbar-fill { height: 100%; width: 0; border-radius: 999px; transition: width 0.7s var(--spring); }
+.mbar.koolh .mbar-lab  { color: var(--volt); }
+.mbar.koolh .mbar-fill { background: linear-gradient(90deg, #ff9a3d, var(--volt)); }
+.mbar.eiwit .mbar-lab  { color: var(--flame); }
+.mbar.eiwit .mbar-fill { background: linear-gradient(90deg, var(--volt), var(--flame)); }
+.mbar.vet .mbar-lab    { color: var(--azure); }
+.mbar.vet .mbar-fill   { background: linear-gradient(90deg, var(--violet), var(--azure)); }
+.tracker-sub { position: relative; margin: 16px 0 0; color: var(--muted); font-size: 0.84rem; font-weight: 600; text-align: center; }
+.tracker-sub strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.tracker .daygoal-note { position: relative; text-align: center; margin-top: 6px; }
+
+@media (max-width: 380px) {
+  .tracker-main { flex-direction: column; }
+  .macro-bars { width: 100%; }
+}
+
+/* ---------- Dagdoel (oud, niet meer gebruikt) ---------- */
 .daygoal {
   padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--line);
   background: linear-gradient(150deg, rgba(255, 45, 120, 0.10), transparent 60%), var(--card);
@@ -338,8 +399,27 @@ h1, h2, h3, h4, p { margin-top: 0; }
   font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px;
   background: rgba(255, 122, 47, 0.16); color: var(--volt); letter-spacing: 0.02em;
 }
+.pill.eiwit { background: rgba(255, 45, 120, 0.16); color: var(--flame); }
+.pill.vet { background: rgba(185, 107, 255, 0.16); color: var(--violet); }
 .pill.kcal { background: rgba(197, 139, 255, 0.16); color: var(--azure); }
-.meal-tip { margin: 0; font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
+.meal-tip { margin: 0 0 4px; font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
+
+/* Afvink-knop per maaltijd */
+.meal-log {
+  margin-top: 8px; padding: 9px 16px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--dc, var(--volt)) 55%, var(--line));
+  background: transparent; color: var(--dc, var(--volt));
+  font-weight: 800; font-size: 0.82rem;
+  transition: transform 0.16s var(--spring), background 0.2s, color 0.2s, border-color 0.2s;
+}
+.meal-log:active { transform: scale(0.95); }
+.meal.eaten { opacity: 0.7; }
+.meal.eaten .meal-title { text-decoration: line-through; }
+.meal.eaten .meal-log { background: var(--dc, var(--volt)); color: var(--volt-ink); border-color: transparent; }
+.day-rest .meal.eaten .meal-log { color: #1c1024; }
+
+/* Print-only blok (beide dagen) — alleen zichtbaar bij printen */
+.print-only { display: none; }
 .meal-tip::before { content: "💡 "; }
 .daytotal { text-align: right; margin: 4px 4px 0; color: var(--muted); font-size: 0.86rem; font-weight: 700; }
 .daytotal strong { color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -503,7 +583,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   .topbar, .foot, #settingsOverlay, .toast, .result-actions, .splash,
-  #intakeView, #loadingView, #emptyView, .hero-glow, .brand-logo { display: none !important; }
+  #intakeView, #loadingView, #emptyView, .hero-glow, .brand-logo,
+  #tracker, #daySection, .week-strip, .meal-log { display: none !important; }
+  .print-only { display: block !important; }
   .app-shell { width: 100%; max-width: 100%; padding: 0; margin: 0; }
 
   #resultView > *, .daygoal, .meal, .fueling, .mini-card, .shopping, .tips, .result-hero {

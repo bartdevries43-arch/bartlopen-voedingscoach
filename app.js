@@ -23,41 +23,43 @@ const API_MODEL = "claude-sonnet-4-6";
 const API_MAX_TOKENS = 8000;
 
 /* --- Embedded systeem-prompt (exact zoals aangeleverd) ------------- */
-const SYSTEM_PROMPT = `Je bent de voedingscoach van bartlopen. Je maakt persoonlijke, praktische voedingsschema's voor hardlopers en mensen die fitter en sterker willen worden. Je schrijft zoals Bart praat: warm, direct, nuchter Nederlands, motiverend, met net dat zetje. Geen kille calorieënteller. Je legt kort uit wat, wanneer en waarom, en je houdt het haalbaar.
+const SYSTEM_PROMPT = `Je bent de voedingscoach van bartlopen. Je bent ook een topkok die in goede restaurants heeft gewerkt en een hardloop- en afvalcoach. Je maakt persoonlijke, praktische én lekkere voedingsschema's voor hardlopers en mensen die fitter en sterker willen worden. Je schrijft zoals Bart praat: warm, direct, nuchter Nederlands, motiverend. Geen kille calorieënteller. Houd alle teksten kort en helder.
 
-Je krijgt de intake van één persoon. Maak op basis daarvan een compleet, persoonlijk schema.
+Je krijgt de intake van één persoon. Maak op basis daarvan een compleet weekschema.
 
 Harde regels:
-- Schrijf alles in het Nederlands.
-- Geef echte maaltijden met concrete ingrediënten en porties, geen vage richtlijnen.
-- Vermeld per maaltijd de koolhydraten in gram.
-- Zet kcal en macro's (koolhydraten, eiwit, vet) in een apart dag-totaal, niet verstopt in de tekst.
-- Maak minimaal twee dagtypes: een rustige dag en een trainingsdag. Stem de trainingsdag af op het type training van deze persoon, met fueling voor, tijdens en na.
-- Respecteer dieet, allergieën en wat iemand niet eet. Overtreed dit nooit.
-- Houd rekening met kooktijd, kookniveau, budget en aantal personen.
-- Maak een boodschappenlijst, gegroepeerd per categorie.
-- Sluit af met minstens 3 coachtips in bartlopen-stem.
+- Schrijf alles in correct Nederlands. Korte, duidelijke zinnen.
+- Maak een hele week: zeven dagen, maandag tot en met zondag, elke dag een eigen menu. Herhaal niet steeds dezelfde maaltijden; varieer echt.
+- Geef echte, smaakvolle recepten met concrete ingrediënten en porties. Geen vage richtlijnen. Kwaliteit van een goede kok, maar haalbaar thuis.
+- Vermeld per maaltijd de koolhydraten, eiwit en vet in gram, plus de kcal. Wees realistisch en consistent: de som van de maaltijden is ongeveer het dagtotaal.
+- Markeer per dag of het een trainingsdag of rustdag is. Geef trainingsdagen fueling voor, tijdens en na, afgestemd op haar training.
+- Respecteer dieet, allergieën en wat iemand niet eet. Overtreed dit nooit, ook niet in een tussendoortje.
+- Houd rekening met haar voorkeuren, kooktijd, kookniveau, budget en aantal personen.
+- Maak één boodschappenlijst voor de hele week, gegroepeerd per categorie.
+- Sluit af met minstens 3 korte coachtips in bartlopen-stem.
 - Antwoord uitsluitend met geldige JSON volgens het schema. Geen tekst eromheen, geen markdown, geen codeblok-tekens.`;
 
-const SCHEMA_HINT = `Antwoord met exact deze JSON-structuur:
+const SCHEMA_HINT = `Antwoord met exact deze JSON-structuur. "dagen" bevat zeven dagen (maandag t/m zondag):
 {
-  "intro": "persoonlijke bartlopen-begroeting met de naam erin",
-  "coachNote": "1-2 zinnen motiverend",
+  "intro": "korte, persoonlijke bartlopen-begroeting met de naam erin",
+  "coachNote": "1 korte motiverende zin",
   "dagdoel": { "kcal": 0, "koolhydraten_g": 0, "eiwit_g": 0, "vet_g": 0, "uitleg": "1 korte zin" },
   "dagen": [
     {
-      "type": "Rustige dag",
-      "training": "bv. geen training of rustige wandeling",
+      "dag": "Maandag",
+      "type": "Trainingsdag",
+      "training": "kort, bv. avondloop 30 min",
+      "fueling": { "voor": "...", "tijdens": "...", "na": "..." },
       "maaltijden": [
-        { "moment": "Ontbijt", "tijd": "07:30", "titel": "...", "ingredienten": ["..."], "koolhydraten_g": 0, "kcal": 0, "tip": "..." }
+        { "moment": "Ontbijt", "tijd": "07:30", "titel": "...", "ingredienten": ["..."], "koolhydraten_g": 0, "eiwit_g": 0, "vet_g": 0, "kcal": 0, "tip": "korte tip" }
       ],
       "dagtotaal_kcal": 0
     },
     {
-      "type": "Trainingsdag",
-      "training": "afgestemd op haar trainingstype",
-      "fueling": { "voor": "...", "tijdens": "...", "na": "..." },
-      "maaltijden": [ "...zelfde structuur als hierboven..." ],
+      "dag": "Dinsdag",
+      "type": "Rustdag",
+      "training": "geen training",
+      "maaltijden": [ "...zelfde maaltijd-structuur..." ],
       "dagtotaal_kcal": 0
     }
   ],
@@ -65,7 +67,8 @@ const SCHEMA_HINT = `Antwoord met exact deze JSON-structuur:
   "snacks": ["...", "..."],
   "boodschappenlijst": [ { "categorie": "Groente & fruit", "items": ["..."] } ],
   "coachtips": ["...", "...", "..."]
-}`;
+}
+Let op: "fueling" alleen op trainingsdagen. Laat "fueling" weg bij rustdagen.`;
 
 /* ================================================================== *
  *  Veilige localStorage (alles in try/catch)
@@ -74,6 +77,8 @@ const KEY_API    = "bartlopen.voeding.apikey";
 const KEY_INTAKE = CONFIG.storeKey + ".intake";
 const KEY_SCHEMA = CONFIG.storeKey + ".schema";
 const KEY_CHECK  = CONFIG.storeKey + ".check";
+const KEY_EATEN  = CONFIG.storeKey + ".eaten"; // afgevinkte maaltijden per dagtype
+const KEY_DAY    = CONFIG.storeKey + ".day";   // gekozen dagtype in de tracker
 
 const store = {
   get(k, fallback = null) {
@@ -343,7 +348,7 @@ async function generateSchema() {
     if (!schema) throw new Error("Ik kreeg geen leesbaar schema terug. Probeer het nog eens.");
 
     store.setJSON(KEY_SCHEMA, schema);
-    store.del(KEY_CHECK); // nieuwe lijst, vinkjes resetten
+    store.del(KEY_CHECK); store.del(KEY_EATEN); store.del(KEY_DAY); // nieuwe lijst, vinkjes resetten
     clearInterval(cycle);
     renderResult(schema);
     showScreen("resultView");
@@ -375,9 +380,58 @@ function parseSchema(text) {
  * ================================================================== */
 const COACH_INITIAL = (CONFIG.coachName.replace(/^coach\s+/i, "")[0] || "C").toUpperCase();
 
+/* Tracker-state */
+let RESULT = null;   // huidig schema
+let dayIdx = 0;      // gekozen dagtype-index
+
+const has = (v) => v != null && v !== "";
+const mealMacros = (m) => ({ kcal: num(m.kcal), k: num(m.koolhydraten_g), e: num(m.eiwit_g), v: num(m.vet_g) });
+function sumMeals(meals, filter) {
+  return (Array.isArray(meals) ? meals : []).reduce((t, m, i) => {
+    if (filter && !filter(i)) return t;
+    const x = mealMacros(m); t.kcal += x.kcal; t.k += x.k; t.e += x.e; t.v += x.v; return t;
+  }, { kcal: 0, k: 0, e: 0, v: 0 });
+}
+const dayTotals = (day) => sumMeals(day.maaltijden);
+const dayKey = (day) => day.dag || day.type || ("dag" + dayIdx);
+const isTrainDay = (day) => /training/i.test(day.type || "");
+const DAY_ABBR = { maandag: "Ma", dinsdag: "Di", woensdag: "Wo", donderdag: "Do", vrijdag: "Vr", zaterdag: "Za", zondag: "Zo" };
+const dayAbbr = (naam, i) => DAY_ABBR[String(naam || "").toLowerCase()] || (naam ? String(naam).slice(0, 2) : "D" + (i + 1));
+const todayName = () => ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"][new Date().getDay()];
+function eatenForDay(day) { const all = store.getJSON(KEY_EATEN, {}) || {}; return all[dayKey(day)] || {}; }
+function setEaten(day, idx, on) {
+  const all = store.getJSON(KEY_EATEN, {}) || {}; const k = dayKey(day);
+  all[k] = all[k] || {};
+  if (on) all[k][idx] = true; else delete all[k][idx];
+  store.setJSON(KEY_EATEN, all);
+}
+const eatenTotals = (day) => { const eat = eatenForDay(day); return sumMeals(day.maaltijden, (i) => eat[i]); };
+
+function fuelingHTML(day) {
+  if (!day.fueling || !(day.fueling.voor || day.fueling.tijdens || day.fueling.na)) return "";
+  const row = (when, what) => what ? `<div class="fueling-row"><span class="fueling-when">${when}</span><span class="fueling-what">${esc(what)}</span></div>` : "";
+  return `<div class="fueling"><h4>Fueling rond je training</h4>${row("Voor", day.fueling.voor)}${row("Tijdens", day.fueling.tijdens)}${row("Na", day.fueling.na)}</div>`;
+}
+function mealPills(m) {
+  return [
+    has(m.koolhydraten_g) ? `<span class="pill">${num(m.koolhydraten_g)}g kh</span>` : "",
+    has(m.eiwit_g) ? `<span class="pill eiwit">${num(m.eiwit_g)}g eiwit</span>` : "",
+    has(m.vet_g) ? `<span class="pill vet">${num(m.vet_g)}g vet</span>` : "",
+    has(m.kcal) ? `<span class="pill kcal">${num(m.kcal)} kcal</span>` : "",
+  ].join("");
+}
+
 function renderResult(s) {
+  RESULT = s;
   const naam = answers.naam || CONFIG.athlete || "";
   const dagen = Array.isArray(s.dagen) ? s.dagen : [];
+
+  /* gekozen dag herstellen: opgeslagen keuze, anders vandaag, anders dag 1 */
+  dayIdx = 0;
+  const savedDay = store.get(KEY_DAY, null);
+  let i = savedDay != null ? dagen.findIndex((d) => (d.dag || d.type || "") === savedDay) : -1;
+  if (i < 0) i = dagen.findIndex((d) => String(d.dag || "").toLowerCase() === todayName());
+  if (i >= 0) dayIdx = i;
 
   const html = [];
 
@@ -398,15 +452,21 @@ function renderResult(s) {
       ${s.coachNote ? `<p class="coach-note">${esc(s.coachNote)}</p>` : ""}
     </section>`);
 
-  /* Dagdoel met ring */
+  /* Tracker (Virtuagym-stijl): dagkeuze + calorieën-over + macrobalken */
   const dg = s.dagdoel || {};
-  const kcal = num(dg.kcal);
-  const koolh = num(dg.koolhydraten_g);
-  const eiwit = num(dg.eiwit_g);
-  const vet = num(dg.vet_g);
   html.push(`
-    <section class="daygoal">
-      <div class="daygoal-top">
+    <section class="tracker" id="tracker">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="week-strip" id="dayToggle">
+        ${dagen.map((d, i) => {
+          const cls = isTrainDay(d) ? "is-train" : "is-rest";
+          return `<button type="button" class="day-pill ${cls} ${i === dayIdx ? "on" : ""}" data-day="${i}" title="${esc(d.dag || ("Dag " + (i + 1)))}">
+            <span class="dp-name">${esc(dayAbbr(d.dag, i))}</span>
+            <span class="dp-dot" aria-hidden="true"></span>
+          </button>`;
+        }).join("")}
+      </div>
+      <div class="tracker-main">
         <div class="ring-wrap" aria-hidden="true">
           <svg viewBox="0 0 120 120" class="ring">
             <defs>
@@ -416,76 +476,18 @@ function renderResult(s) {
               </linearGradient>
             </defs>
             <circle class="ring-bg" cx="60" cy="60" r="52" />
-            <circle class="ring-fg" id="goalRing" cx="60" cy="60" r="52" />
+            <circle class="ring-fg" id="calRing" cx="60" cy="60" r="52" />
           </svg>
-          <div class="ring-label"><strong>${koolh || "–"}</strong><span>g koolh.</span></div>
+          <div class="ring-label"><strong id="calLeft">–</strong><span id="calLeftLab">kcal over</span></div>
         </div>
-        <div class="daygoal-head">
-          <span class="eyebrow">Jouw dagdoel</span>
-          <h3>Per dag, ongeveer</h3>
-          <span class="kcal-big"><strong>${kcal || "–"}</strong> kcal</span>
-        </div>
+        <div class="macro-bars" id="macroBars"></div>
       </div>
-      <div class="macros">
-        <div class="macro koolhydraten"><span class="m-val">${koolh || "–"}g</span><span class="m-lab">Koolhydraten</span></div>
-        <div class="macro eiwit"><span class="m-val">${eiwit || "–"}g</span><span class="m-lab">Eiwit</span></div>
-        <div class="macro vet"><span class="m-val">${vet || "–"}g</span><span class="m-lab">Vet</span></div>
-      </div>
+      <p class="tracker-sub" id="trackerSub"></p>
       ${dg.uitleg ? `<p class="daygoal-note">${esc(dg.uitleg)}</p>` : ""}
     </section>`);
 
-  /* Dagen */
-  dagen.forEach((d) => {
-    const isTrain = /training/i.test(d.type || "");
-    const cls = isTrain ? "day-train" : "day-rest";
-    const badge = isTrain ? "🏃" : "🌿";
-    const meals = Array.isArray(d.maaltijden) ? d.maaltijden : [];
-
-    let fuelingHtml = "";
-    if (d.fueling && (d.fueling.voor || d.fueling.tijdens || d.fueling.na)) {
-      const row = (when, what) => what ? `<div class="fueling-row"><span class="fueling-when">${when}</span><span class="fueling-what">${esc(what)}</span></div>` : "";
-      fuelingHtml = `
-        <div class="fueling">
-          <h4>Fueling rond je training</h4>
-          ${row("Voor", d.fueling.voor)}
-          ${row("Tijdens", d.fueling.tijdens)}
-          ${row("Na", d.fueling.na)}
-        </div>`;
-    }
-
-    const mealsHtml = meals.map((m) => {
-      const ingr = Array.isArray(m.ingredienten) ? m.ingredienten : [];
-      const koolhPill = (m.koolhydraten_g != null && m.koolhydraten_g !== "") ? `<span class="pill">${num(m.koolhydraten_g)}g koolh.</span>` : "";
-      const kcalPill = (m.kcal != null && m.kcal !== "") ? `<span class="pill kcal">${num(m.kcal)} kcal</span>` : "";
-      return `
-        <article class="meal">
-          <div class="meal-time">
-            <span class="mt-moment">${esc(m.moment || "")}</span>
-            ${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}
-          </div>
-          <div class="meal-body">
-            <h4 class="meal-title">${esc(m.titel || "")}</h4>
-            ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
-            <div class="meal-meta">${koolhPill}${kcalPill}</div>
-            ${m.tip ? `<p class="meal-tip">${esc(m.tip)}</p>` : ""}
-          </div>
-        </article>`;
-    }).join("");
-
-    html.push(`
-      <section class="day-section ${cls}">
-        <div class="day-head">
-          <span class="day-badge">${badge}</span>
-          <div class="day-head-text">
-            <h3>${esc(d.type || "Dag")}</h3>
-            ${d.training ? `<span>${esc(d.training)}</span>` : ""}
-          </div>
-        </div>
-        ${fuelingHtml}
-        ${mealsHtml}
-        ${d.dagtotaal_kcal ? `<p class="daytotal">Dagtotaal: <strong>${num(d.dagtotaal_kcal)} kcal</strong></p>` : ""}
-      </section>`);
-  });
+  /* Container voor de maaltijden van de gekozen dag (interactief) */
+  html.push(`<section class="day-section" id="daySection"></section>`);
 
   /* Hydratatie & snacks */
   const snacks = Array.isArray(s.snacks) ? s.snacks : [];
@@ -523,6 +525,34 @@ function renderResult(s) {
       </section>`);
   }
 
+  /* Hele week volledig — alleen voor de print (zwart-wit op A4) */
+  const printDays = dagen.map((d) => {
+    const isTrain = isTrainDay(d);
+    const cls = isTrain ? "day-train" : "day-rest";
+    const badge = isTrain ? "🏃" : "🌿";
+    const meals = Array.isArray(d.maaltijden) ? d.maaltijden : [];
+    const t = dayTotals(d);
+    const mealsHtml = meals.map((m) => {
+      const ingr = Array.isArray(m.ingredienten) ? m.ingredienten : [];
+      return `<article class="meal">
+          <div class="meal-time"><span class="mt-moment">${esc(m.moment || "")}</span>${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}</div>
+          <div class="meal-body">
+            <h4 class="meal-title">${esc(m.titel || "")}</h4>
+            ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+            <div class="meal-meta">${mealPills(m)}</div>
+            ${m.tip ? `<p class="meal-tip">${esc(m.tip)}</p>` : ""}
+          </div>
+        </article>`;
+    }).join("");
+    return `<section class="day-section ${cls}">
+        <div class="day-head"><span class="day-badge">${badge}</span><div class="day-head-text"><h3>${esc(d.dag || d.type || "Dag")}</h3><span>${[d.type, (d.training && !/^geen/i.test(d.training)) ? d.training : ""].filter(Boolean).map(esc).join(" · ")}</span></div></div>
+        ${fuelingHTML(d)}
+        ${mealsHtml}
+        <p class="daytotal">Dagtotaal: <strong>${t.kcal} kcal</strong> · ${t.k}g kh · ${t.e}g eiwit · ${t.v}g vet</p>
+      </section>`;
+  }).join("");
+  html.push(`<div class="print-only">${printDays}</div>`);
+
   /* Acties */
   html.push(`
     <div class="result-actions">
@@ -533,21 +563,137 @@ function renderResult(s) {
 
   $("resultView").innerHTML = html.join("");
   wireResult(s);
+  renderDay();
+}
+
+/* Maaltijden van de gekozen dag tekenen + tracker bijwerken */
+function renderDay() {
+  if (!RESULT) return;
+  const dagen = Array.isArray(RESULT.dagen) ? RESULT.dagen : [];
+  const day = dagen[dayIdx];
+  if (!day) return;
+  const isTrain = isTrainDay(day);
+  const dc = isTrain ? "day-train" : "day-rest";
+
+  /* Week-pills */
+  document.querySelectorAll("#dayToggle .day-pill").forEach((b, i) => b.classList.toggle("on", i === dayIdx));
+  const tr = $("tracker");
+  if (tr) { tr.classList.remove("day-train", "day-rest"); tr.classList.add(dc); }
+
+  /* Macrobalken (doel = dagtotalen van deze dag) */
+  const goals = dayTotals(day);
+  const macroBar = (lab, cls, goal) =>
+    `<div class="mbar ${cls}"><div class="mbar-top"><span class="mbar-lab">${lab}</span><span class="mbar-val" data-bar="${cls}">0 / ${goal} g</span></div><div class="mbar-track"><div class="mbar-fill" data-fill="${cls}"></div></div></div>`;
+  $("macroBars").innerHTML = macroBar("Koolhydraten", "koolh", goals.k) + macroBar("Eiwit", "eiwit", goals.e) + macroBar("Vet", "vet", goals.v);
+
+  /* Maaltijden met afvink-knop */
+  const meals = Array.isArray(day.maaltijden) ? day.maaltijden : [];
+  const eat = eatenForDay(day);
+  const mealsHtml = meals.map((m, i) => {
+    const ingr = Array.isArray(m.ingredienten) ? m.ingredienten : [];
+    const on = !!eat[i];
+    return `<article class="meal ${on ? "eaten" : ""}" data-meal="${i}">
+        <div class="meal-time"><span class="mt-moment">${esc(m.moment || "")}</span>${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}</div>
+        <div class="meal-body">
+          <h4 class="meal-title">${esc(m.titel || "")}</h4>
+          ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+          <div class="meal-meta">${mealPills(m)}</div>
+          ${m.tip ? `<p class="meal-tip">${esc(m.tip)}</p>` : ""}
+          <button type="button" class="meal-log" data-meal="${i}">${on ? "✓ Gegeten" : "+ Gegeten"}</button>
+        </div>
+      </article>`;
+  }).join("");
+
+  const sub = [day.type, (day.training && !/^geen/i.test(day.training)) ? day.training : ""].filter(Boolean).map(esc).join(" · ");
+  const ds = $("daySection");
+  ds.className = `day-section ${dc}`;
+  ds.innerHTML = `
+    <div class="day-head">
+      <span class="day-badge">${isTrain ? "🏃" : "🌿"}</span>
+      <div class="day-head-text"><h3>${esc(day.dag || day.type || "Dag")}</h3>${sub ? `<span>${sub}</span>` : ""}</div>
+    </div>
+    ${fuelingHTML(day)}
+    ${mealsHtml}`;
+
+  ds.querySelectorAll(".meal-log").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const i = +btn.dataset.meal;
+      const cur = !!eatenForDay(day)[i];
+      setEaten(day, i, !cur);
+      const art = btn.closest(".meal");
+      art.classList.toggle("eaten", !cur);
+      btn.textContent = !cur ? "✓ Gegeten" : "+ Gegeten";
+      updateTracker();
+    });
+  });
+
+  updateTracker();
+}
+
+/* Ring + macrobalken bijwerken op basis van wat is afgevinkt */
+function updateTracker() {
+  if (!RESULT) return;
+  const dagen = Array.isArray(RESULT.dagen) ? RESULT.dagen : [];
+  const day = dagen[dayIdx];
+  if (!day) return;
+  const goals = dayTotals(day);
+  const eaten = eatenTotals(day);
+
+  const ring = $("calRing");
+  if (ring) {
+    const r = 52, c = 2 * Math.PI * r;
+    const pct = goals.kcal ? Math.max(0, Math.min(1, eaten.kcal / goals.kcal)) : 0;
+    ring.style.strokeDasharray = c;
+    requestAnimationFrame(() => { ring.style.strokeDashoffset = c * (1 - pct); });
+  }
+  const left = Math.max(0, goals.kcal - eaten.kcal);
+  const vol = goals.kcal > 0 && eaten.kcal >= goals.kcal;
+  $("calLeft").textContent = vol ? "0" : left;
+  $("calLeftLab").textContent = vol ? "kcal · vol!" : "kcal over";
+
+  const setBar = (cls, val, goal) => {
+    const fill = document.querySelector(`[data-fill="${cls}"]`);
+    const labEl = document.querySelector(`[data-bar="${cls}"]`);
+    const pct = goal ? Math.max(0, Math.min(1, val / goal)) : 0;
+    if (fill) requestAnimationFrame(() => { fill.style.width = (pct * 100).toFixed(0) + "%"; });
+    if (labEl) labEl.textContent = `${Math.round(val)} / ${Math.round(goal)} g`;
+  };
+  setBar("koolh", eaten.k, goals.k);
+  setBar("eiwit", eaten.e, goals.e);
+  setBar("vet", eaten.v, goals.v);
+
+  const doelKcal = num((RESULT.dagdoel || {}).kcal) || goals.kcal;
+  $("trackerSub").innerHTML = `Gegeten: <strong>${eaten.kcal}</strong> van ${goals.kcal} kcal · dagdoel ${doelKcal} kcal`;
+
+  refreshWeekPills();
+}
+
+/* Dagen die helemaal zijn afgevinkt een vinkje geven in de week-strip */
+function refreshWeekPills() {
+  const dagen = Array.isArray(RESULT && RESULT.dagen) ? RESULT.dagen : [];
+  document.querySelectorAll("#dayToggle .day-pill").forEach((b, i) => {
+    const day = dagen[i];
+    if (!day) return;
+    const meals = Array.isArray(day.maaltijden) ? day.maaltijden : [];
+    const eat = eatenForDay(day);
+    const done = meals.length > 0 && meals.every((_, j) => eat[j]);
+    b.classList.toggle("done", done);
+  });
 }
 
 function wireResult(s) {
-  /* Ring animeren (koolhydraten als percentage van dagdoel) */
-  const dg = s.dagdoel || {};
-  const koolh = num(dg.koolhydraten_g);
-  const ring = $("goalRing");
-  if (ring) {
-    const r = 52, c = 2 * Math.PI * r;
-    ring.style.strokeDasharray = c;
-    ring.style.strokeDashoffset = c;
-    // De ring is een visuele meter: vul 'm voor een vol gevoel, geschaald op 400g max.
-    const pct = Math.max(0.12, Math.min(1, koolh ? koolh / 400 : 0.5));
-    requestAnimationFrame(() => { ring.style.strokeDashoffset = c * (1 - pct); });
-  }
+  const dagen = Array.isArray(s.dagen) ? s.dagen : [];
+
+  /* Dagkeuze in de tracker (week-pills) */
+  const toggle = $("dayToggle");
+  if (toggle) toggle.querySelectorAll(".day-pill").forEach((b) => {
+    b.addEventListener("click", () => {
+      dayIdx = +b.dataset.day;
+      const d = dagen[dayIdx] || {};
+      store.set(KEY_DAY, d.dag || d.type || "");
+      renderDay();
+    });
+  });
 
   /* Boodschappen afvinken (in localStorage) */
   $("resultView").querySelectorAll(".shop-item").forEach((row) => {
@@ -665,7 +811,7 @@ $("saveSettings").addEventListener("click", () => {
 });
 $("clearData").addEventListener("click", () => {
   if (confirm("Schema én ingevulde antwoorden wissen? De API-sleutel blijft staan.")) {
-    store.del(KEY_SCHEMA); store.del(KEY_INTAKE); store.del(KEY_CHECK);
+    store.del(KEY_SCHEMA); store.del(KEY_INTAKE); store.del(KEY_CHECK); store.del(KEY_EATEN); store.del(KEY_DAY);
     answers = {};
     INTAKE.forEach((s) => s.fields.forEach((f) => { if (f.value != null) answers[f.key] = f.value; }));
     toast("Gewist. Schoon begin!");
