@@ -117,8 +117,8 @@ const INTAKE = [
   ]},
   { title: "Bewegen", icon: "🏃", sub: "Hoe ziet je week eruit?", fields: [
     { key: "dagenPerWeek", label: "Dagen per week sporten of lopen", type: "number", unit: "dgn", placeholder: "bv. 4" },
-    { key: "kmPerWeek", label: "Ongeveer hoeveel km per week?", type: "text", placeholder: "bv. 25 — of 'geen idee'",
-      hint: "Weet je het niet? Schat of zet 'geen idee'." },
+    { key: "kmPerWeek", label: "Ongeveer hoeveel km per week?", type: "text", placeholder: "bv. 25, of 'geen idee'",
+      hint: "Weet je het niet? Schat het, of zet 'geen idee'." },
     { key: "trainingen", label: "Wat voor trainingen doe je?", type: "multichoice",
       options: ["Rustige duurloop", "Intervallen", "Lange duurloop", "Kracht", "Anders"], hint: "Meerdere mag." },
     { key: "werk", label: "Wat voor werk doe je?", type: "choice", options: ["Zittend", "Staand", "Fysiek zwaar"] },
@@ -294,9 +294,9 @@ function buildUserMessage() {
  * ================================================================== */
 const LOADING_LINES = [
   "Ik reken jouw dagdoel uit…",
-  "Maaltijden samenstellen die bij je passen…",
-  "De trainingsdag op je loopjes afstemmen…",
-  "Boodschappenlijstje maken…",
+  "Je weekmenu samenstellen…",
+  "De trainingsdagen op je loopjes afstemmen…",
+  "Boodschappenlijst voor de week maken…",
   "Nog even de coachtips erbij…",
 ];
 
