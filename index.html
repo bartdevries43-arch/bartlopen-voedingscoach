@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Voedingscoach — bartlopen</title>
-    <meta name="description" content="Jouw persoonlijke voedingsschema, gemaakt door de voedingscoach van bartlopen." />
+    <meta name="description" content="Jouw persoonlijke weekmenu van de voedingscoach van bartlopen." />
     <meta name="theme-color" content="#0b0a0d" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -12,7 +12,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Voedingscoach" />
-    <link rel="stylesheet" href="styles.css?v=7" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
     <div id="splash" class="splash" aria-hidden="true">
@@ -25,99 +25,17 @@
 
     <div class="app-shell">
       <header class="topbar">
-        <button class="icon-button hidden" id="backButton" type="button" aria-label="Terug">
-          <span aria-hidden="true">‹</span>
-        </button>
         <div class="topbar-title">
           <p class="kicker">Voedingscoach · <span id="brandHandle">@bartlopen</span></p>
-          <h1 id="appName">Jouw schema</h1>
+          <h1 id="appName">Jouw weekmenu</h1>
         </div>
-        <button class="icon-button" id="settingsButton" type="button" aria-label="Instellingen" title="Instellingen">
-          <span aria-hidden="true">⚙</span>
+        <button class="icon-button" id="resetButton" type="button" aria-label="Afvinkjes wissen" title="Afvinkjes wissen">
+          <span aria-hidden="true">⟲</span>
         </button>
       </header>
 
       <main>
-        <!-- ============ INTAKE ============ -->
-        <div id="intakeView">
-          <section class="hero reveal" id="intakeIntro">
-            <div class="hero-glow" aria-hidden="true"></div>
-            <img class="brand-logo" src="coach-logo.png" alt="bartlopen — Voedingscoach" onerror="this.style.display='none'" />
-            <div class="hero-top">
-              <div class="hero-copy">
-                <p class="hero-kicker">Voedingscoach</p>
-                <h2 id="introTitle">Hoi <span id="introName">Isa</span>!</h2>
-                <p class="hero-runner">jouw persoonlijke <strong>voedingsschema</strong></p>
-                <p class="hero-motto">Klaar om te beginnen? 🧡</p>
-              </div>
-              <div class="ring-wrap" aria-hidden="true">
-                <svg viewBox="0 0 120 120" class="ring">
-                  <defs>
-                    <linearGradient id="introRingGrad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stop-color="#ff9a3d" />
-                      <stop offset="1" stop-color="#ff2d78" />
-                    </linearGradient>
-                  </defs>
-                  <circle class="ring-bg" cx="60" cy="60" r="52" />
-                  <circle class="ring-fg" id="introRing" cx="60" cy="60" r="52" style="stroke:url(#introRingGrad)" />
-                </svg>
-                <div class="ring-label"><strong id="introSteps">6</strong><span>stappen</span></div>
-              </div>
-            </div>
-            <p class="intake-lead" id="introLead">
-              Een paar korte vragen. Hoe eerlijker je invult, hoe beter jouw schema wordt.
-            </p>
-            <button class="btn-primary" id="startIntake" type="button">Beginnen</button>
-          </section>
-
-          <section class="intake-form hidden" id="intakeForm">
-            <div class="progress">
-              <div class="progress-meta">
-                <span id="stepLabel">Stap 1</span>
-                <span id="stepCount">1 / 6</span>
-              </div>
-              <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-            </div>
-
-            <div class="step-card">
-              <span class="step-icon" id="stepIcon" aria-hidden="true">👤</span>
-              <h2 class="step-title" id="stepTitle">Over jou</h2>
-              <p class="step-sub" id="stepSub"></p>
-              <div class="fields" id="stepFields"></div>
-            </div>
-
-            <div class="intake-nav">
-              <button class="btn-ghost" id="prevStep" type="button">‹ Terug</button>
-              <button class="btn-primary" id="nextStep" type="button">Volgende ›</button>
-            </div>
-          </section>
-        </div>
-
-        <!-- ============ LADEN ============ -->
-        <div id="loadingView" class="hidden">
-          <section class="loading-card">
-            <div class="hero-glow" aria-hidden="true"></div>
-            <div class="cook-mark" aria-hidden="true">🍳</div>
-            <h2 id="loadingTitle">Even rekenen…</h2>
-            <p class="loading-sub" id="loadingSub">Ik stel jouw persoonlijke schema samen. Momentje.</p>
-            <div class="loadbar-wrap"><div class="loadbar"></div></div>
-          </section>
-        </div>
-
-        <!-- ============ RESULTAAT ============ -->
-        <div id="resultView" class="hidden"></div>
-
-        <!-- ============ LEGE STAAT / FOUT ============ -->
-        <div id="emptyView" class="hidden">
-          <section class="empty-card reveal">
-            <div class="hero-glow" aria-hidden="true"></div>
-            <img class="brand-logo" src="coach-logo.png" alt="bartlopen — Voedingscoach" onerror="this.style.display='none'" />
-            <p class="hero-kicker">Voedingscoach</p>
-            <h2 id="emptyTitle">Nog geen schema</h2>
-            <p class="intake-lead" id="emptyLead">Vul je intake in en ik reken het voor je uit.</p>
-            <button class="btn-primary" id="emptyStart" type="button">Intake invullen</button>
-          </section>
-        </div>
+        <div id="resultView"></div>
       </main>
 
       <footer class="foot">
@@ -125,29 +43,8 @@
       </footer>
     </div>
 
-    <!-- ============ INSTELLINGEN ============ -->
-    <div id="settingsOverlay" class="overlay hidden" aria-hidden="true">
-      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsHead">
-        <div class="sheet-head">
-          <h2 id="settingsHead">Instellingen</h2>
-          <button class="icon-button" id="closeSettings" type="button" aria-label="Sluiten"><span aria-hidden="true">✕</span></button>
-        </div>
-        <p class="sheet-note">Dit scherm is voor de coach. Vul hier eenmalig de API-sleutel in; die blijft op dit apparaat.</p>
-        <label class="sheet-label">Anthropic API-sleutel
-          <input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" />
-        </label>
-        <label class="sheet-check">
-          <input id="showKey" type="checkbox" /> Sleutel tonen
-        </label>
-        <div class="sheet-actions">
-          <button class="btn-primary" id="saveSettings" type="button">Opslaan</button>
-          <button class="btn-ghost" id="clearData" type="button">Schema &amp; antwoorden wissen</button>
-        </div>
-      </div>
-    </div>
-
     <div id="toast" class="toast" aria-live="polite"></div>
 
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=8"></script>
   </body>
 </html>

@@ -1,392 +1,161 @@
 /* ================================================================== *
  *  bartlopen — Voedingscoach
- *  Intake -> Anthropic API -> persoonlijk voedingsschema.
- *  Alles lokaal in de browser. Statische site, geen server nodig.
+ *  Vast weekmenu + interactieve tracker (afvinken, calorieën & macro's).
+ *  Net als de hardloopapps: alles lokaal, geen server, geen sleutel.
  * ================================================================== */
 
 /* ========== INSTELLINGEN PER PERSOON — pas dit blok aan ==========
    Hergebruik deze app voor iemand anders: kopieer de map, wijzig dit
-   blok en (zo nodig) coach.jpg. De storeKey moet UNIEK zijn per app. */
+   blok, vervang coach.jpg en pas het WEEKMENU hieronder aan.          */
 const CONFIG = {
-  appName:     "Jouw schema",       // titel boven in de app
-  athlete:     "Isa",               // voor wie het schema is (voorvult de naam)
-  coachName:   "Coach Bart",        // naam van de coach
-  coachHandle: "@bartlopen",        // TikTok/social van de coach
-  coachPhoto:  "coach.jpg",         // coachfoto (bestand in deze map)
-  storeKey:    "bartlopen.voeding.isa.v1", // UNIEKE opslagsleutel
+  appName:     "Jouw weekmenu",
+  athlete:     "Isa",
+  coachName:   "Coach Bart",
+  coachHandle: "@bartlopen",
+  coachPhoto:  "coach.jpg",
+  storeKey:    "bartlopen.voeding.isa.v1", // UNIEK per persoon
 };
 /* =================================================================== */
 
-/* --- API --- */
-const API_URL = "https://api.anthropic.com/v1/messages";
-const API_MODEL = "claude-sonnet-4-6";
-const API_MAX_TOKENS = 8000;
-
-/* --- Embedded systeem-prompt (exact zoals aangeleverd) ------------- */
-const SYSTEM_PROMPT = `Je bent de voedingscoach van bartlopen. Je bent ook een topkok die in goede restaurants heeft gewerkt en een hardloop- en afvalcoach. Je maakt persoonlijke, praktische én lekkere voedingsschema's voor hardlopers en mensen die fitter en sterker willen worden. Je schrijft zoals Bart praat: warm, direct, nuchter Nederlands, motiverend. Geen kille calorieënteller. Houd alle teksten kort en helder.
-
-Je krijgt de intake van één persoon. Maak op basis daarvan een compleet weekschema.
-
-Harde regels:
-- Schrijf alles in correct Nederlands. Korte, duidelijke zinnen.
-- Maak een hele week: zeven dagen, maandag tot en met zondag, elke dag een eigen menu. Herhaal niet steeds dezelfde maaltijden; varieer echt.
-- Geef echte, smaakvolle recepten met concrete ingrediënten en porties. Geen vage richtlijnen. Kwaliteit van een goede kok, maar haalbaar thuis.
-- Vermeld per maaltijd de koolhydraten, eiwit en vet in gram, plus de kcal. Wees realistisch en consistent: de som van de maaltijden is ongeveer het dagtotaal.
-- Markeer per dag of het een trainingsdag of rustdag is. Geef trainingsdagen fueling voor, tijdens en na, afgestemd op haar training.
-- Respecteer dieet, allergieën en wat iemand niet eet of niet lust. Overtreed dit nooit, ook niet in een tussendoortje.
-- Volg de keukenvoorkeur van deze persoon (bijvoorbeeld mediterraans) in de hele week.
-- Beperk voedselverspilling: laat ingrediënten door de week terugkomen. Gebruik dezelfde bron van eiwit of koolhydraten in meerdere maaltijden en koop slim in, zodat er weinig overblijft.
-- Houd rekening met haar voorkeuren, kooktijd, kookniveau, budget en aantal personen.
-- Maak één boodschappenlijst voor de hele week, gegroepeerd per categorie.
-- Sluit af met minstens 3 korte coachtips in bartlopen-stem.
-- Antwoord uitsluitend met geldige JSON volgens het schema. Geen tekst eromheen, geen markdown, geen codeblok-tekens.`;
-
-const SCHEMA_HINT = `Antwoord met exact deze JSON-structuur. "dagen" bevat zeven dagen (maandag t/m zondag):
-{
-  "intro": "korte, persoonlijke bartlopen-begroeting met de naam erin",
-  "coachNote": "1 korte motiverende zin",
-  "dagdoel": { "kcal": 0, "koolhydraten_g": 0, "eiwit_g": 0, "vet_g": 0, "uitleg": "1 korte zin" },
-  "dagen": [
-    {
-      "dag": "Maandag",
-      "type": "Trainingsdag",
-      "training": "kort, bv. avondloop 30 min",
-      "fueling": { "voor": "...", "tijdens": "...", "na": "..." },
-      "maaltijden": [
-        { "moment": "Ontbijt", "tijd": "07:30", "titel": "...", "ingredienten": ["..."], "koolhydraten_g": 0, "eiwit_g": 0, "vet_g": 0, "kcal": 0, "tip": "korte tip" }
-      ],
-      "dagtotaal_kcal": 0
-    },
-    {
-      "dag": "Dinsdag",
-      "type": "Rustdag",
-      "training": "geen training",
-      "maaltijden": [ "...zelfde maaltijd-structuur..." ],
-      "dagtotaal_kcal": 0
-    }
-  ],
-  "hydratatie": "kort en concreet",
-  "snacks": ["...", "..."],
-  "boodschappenlijst": [ { "categorie": "Groente & fruit", "items": ["..."] } ],
-  "coachtips": ["...", "...", "..."]
-}
-Let op: "fueling" alleen op trainingsdagen. Laat "fueling" weg bij rustdagen.`;
+/* --- Klein hulpje om het weekmenu compact te schrijven -------------- */
+const M = (moment, tijd, titel, ingredienten, kh, e, v, kcal, tip) =>
+  ({ moment, tijd, titel, ingredienten, koolhydraten_g: kh, eiwit_g: e, vet_g: v, kcal, tip });
+const oatsRust  = (bes) => M("Ontbijt", "07:30", "Overnight oats met magere kwark, honing en " + bes,
+  ["50 g havermout", "150 g magere kwark", "scheutje water", "1 tl honing", "snufje kaneel", "handje " + bes],
+  52, 23, 6, 380, "Maak 'm de avond ervoor, dan staat je ontbijt 's ochtends klaar.");
+const oatsTrain = (bes) => M("Ontbijt", "07:30", "Overnight oats met magere kwark, honing en " + bes,
+  ["60 g havermout", "150 g magere kwark", "scheutje water", "1 tl honing", "snufje kaneel", "handje " + bes, "1 el pompoenpitten"],
+  62, 25, 11, 450, "Iets grotere portie, vandaag heb je de brandstof nodig.");
+const fruit = (tijd, titel, ingr, kh, kcal) => M("Tussendoor", tijd, titel, ingr, kh, 1, 0, kcal, "Lekker fris fruitmoment voor de ochtend.");
+const rauwHummus = (tijd) => M("Tussendoor", tijd, "Rauwkost met hummus",
+  ["komkommer, paprika en worteltjes", "2 el hummus"], 14, 5, 9, 150, "Snijd je rauwkost de avond ervoor alvast.");
+const rauwFeta = (tijd) => M("Tussendoor", tijd, "Rauwkost met een blokje feta",
+  ["komkommer, paprika en worteltjes", "20 g feta"], 8, 6, 9, 140, "Knapperig en hartig, precies genoeg.");
 
 /* ================================================================== *
- *  Veilige localStorage (alles in try/catch)
+ *  HET WEEKMENU — door coach Bart samengesteld
+ *  Mediterraans, geen melk, geen banaan, allergieproof, weinig verspilling.
  * ================================================================== */
-const KEY_API    = "bartlopen.voeding.apikey";
-const KEY_INTAKE = CONFIG.storeKey + ".intake";
-const KEY_SCHEMA = CONFIG.storeKey + ".schema";
-const KEY_CHECK  = CONFIG.storeKey + ".check";
-const KEY_EATEN  = CONFIG.storeKey + ".eaten"; // afgevinkte maaltijden per dagtype
-const KEY_DAY    = CONFIG.storeKey + ".day";   // gekozen dagtype in de tracker
+const SCHEMA = {
+  intro: "Hoi Isa! Hier is je week. Mediterraans, vol smaak en makkelijk vol te houden. We gaan stap voor stap richting je doel.",
+  coachNote: "Een halve kilo per week, zonder honger. Jij kunt dit.",
+  dagdoel: { kcal: 1650, koolhydraten_g: 175, eiwit_g: 95, vet_g: 60, uitleg: "Genoeg om je te voeden, met een lichte min zodat je rustig afvalt." },
+  hydratatie: "Drink 1,5 tot 2 liter water per dag. Rond je looptjes een extra glas, voor en na.",
+  snacks: [
+    "Een stuk fruit: sinaasappel, druiven of aardbeien",
+    "Rauwkost met hummus: komkommer, paprika en worteltjes",
+    "Rauwkost met een blokje feta",
+    "Magere kwark met blauwe bessen",
+    "Een handje olijven",
+    "Twee dadels, vlak voor je training",
+  ],
+  boodschappenlijst: [
+    { categorie: "Groente & fruit", items: ["Cherrytomaat", "Snoeptomaatjes", "Komkommer", "Worteltjes", "Courgette", "Paprika", "Aubergine", "Rode ui", "Ui", "Knoflook", "Citroen", "Aardbeien", "Blauwe bessen", "Sinaasappel", "Druiven", "Granaatappel", "Verse peterselie", "Verse munt", "Verse dille"] },
+    { categorie: "Vlees, vis & eiwit", items: ["Kipfilet", "Kabeljauwfilet", "Zalmfilet", "Tonijn uit blik", "Eieren", "Kikkererwten uit blik", "Halloumi", "Hummus"] },
+    { categorie: "Zuivel", items: ["Magere kwark", "Feta", "30+ kaas"] },
+    { categorie: "Granen & brood", items: ["Havermout", "Parelcouscous", "Volkoren couscous", "Bulgur", "Zilvervliesrijst", "Volkoren pasta", "Volkorenbrood", "Krieltjes"] },
+    { categorie: "Kast & kruiden", items: ["Olijfolie", "Olijven", "Kappertjes", "Tahin", "Tomatensaus (passata)", "Honing", "Dadels", "Kaneel", "Ras el hanout", "Paprikapoeder", "Oregano", "Pompoenpitten"] },
+  ],
+  coachtips: [
+    "Mediterraans eten is jouw stijl: veel groente, olijfolie, feta en verse kruiden. Lekker, voedzaam en precies goed om rustig af te vallen.",
+    "Ik laat basisingrediënten terugkomen, zodat je weinig weggooit. Eén bak magere kwark, één blok feta, één pak couscous, één blik kikkererwten en een portie kip gaan de hele week mee.",
+    "Rooster je groente op hoog vuur met een scheutje olijfolie tot de randjes karamelliseren. Maak meteen een extra plaat, die eet je later in een salade, wrap of tortilla.",
+    "Geen banaan nodig. Voor je loop pak je twee dadels of een snee brood met honing. Snelle brandstof zonder gedoe.",
+  ],
+  dagen: [
+    { dag: "Maandag", type: "Trainingsdag", training: "Avondloop 30 min",
+      fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Het is een kort rondje, dus water is genoeg.", na: "Eet binnen het half uur. De pasta hieronder is je herstelmaaltijd." },
+      maaltijden: [
+        oatsTrain("blauwe bessen"),
+        fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+        M("Lunch", "12:30", "Parelcouscoussalade met feta en munt", ["60 g parelcouscous", "40 g feta", "komkommer en cherrytomaat", "handje olijven", "citroen, munt en olijfolie"], 50, 16, 16, 460, "Maak meteen een dubbele portie voor woensdag."),
+        rauwHummus("15:30"),
+        M("Diner", "19:30", "Volkoren pasta met kip, courgette en feta", ["80 g volkoren pasta", "120 g kipfilet", "courgette en cherrytomaat", "30 g feta", "knoflook en olijfolie"], 65, 38, 16, 580, "Bak meteen 100 g kip extra voor de lunch van woensdag."),
+      ], dagtotaal_kcal: 1730 },
+
+    { dag: "Dinsdag", type: "Rustdag", training: "geen training",
+      maaltijden: [
+        oatsRust("blauwe bessen"),
+        fruit("10:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+        M("Lunch", "12:30", "Bulgur-tabouleh met kikkererwten", ["60 g bulgur", "100 g kikkererwten", "veel peterselie en munt", "tomaat en komkommer", "citroen en olijfolie"], 55, 15, 12, 440, "Bewaar de rest van de kikkererwten voor donderdag."),
+        rauwHummus("15:30"),
+        M("Diner", "18:30", "Kabeljauw uit de oven met cherrytomaat, olijven en krieltjes", ["150 g kabeljauwfilet", "250 g krieltjes", "cherrytomaat en olijven", "knoflook, citroen en olijfolie"], 45, 35, 14, 480, "Alles op één bakplaat, dus weinig afwas."),
+      ], dagtotaal_kcal: 1540 },
+
+    { dag: "Woensdag", type: "Trainingsdag", training: "Avondloop 30 min",
+      fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "De pasta hieronder is je herstelmaaltijd." },
+      maaltijden: [
+        oatsTrain("aardbeien"),
+        fruit("10:30", "Handje aardbeien en blauwe bessen", ["handje aardbeien", "handje blauwe bessen"], 16, 80),
+        M("Lunch", "12:30", "Couscousbowl met kip en ras el hanout", ["60 g volkoren couscous", "100 g kipfilet van maandag", "courgette en paprika", "30 g feta", "citroen en olijfolie"], 52, 30, 14, 470, "Gebruik de kip die je maandag extra hebt gebakken."),
+        rauwHummus("15:30"),
+        M("Diner", "19:30", "Volkoren pasta puttanesca met tonijn en olijven", ["80 g volkoren pasta", "1 blik tonijn, uitgelekt", "tomatensaus", "olijven, kappertjes en knoflook", "peterselie"], 66, 32, 12, 540, "Een klassieker die in een kwartier klaarstaat."),
+      ], dagtotaal_kcal: 1700 },
+
+    { dag: "Donderdag", type: "Rustdag", training: "geen training",
+      maaltijden: [
+        oatsRust("blauwe bessen"),
+        fruit("10:30", "Halve granaatappel", ["1/2 granaatappel"], 18, 90),
+        M("Lunch", "12:30", "Rijstsalade met kikkererwten, geroosterde paprika en feta", ["60 g zilvervliesrijst", "100 g kikkererwten", "geroosterde paprika", "30 g feta", "rode ui, citroen en olijfolie"], 58, 16, 14, 470, "Kikkererwten uit hetzelfde blik als dinsdag."),
+        rauwHummus("15:30"),
+        M("Diner", "18:30", "Kip-traybake met paprika, rode ui, olijven en bulgur", ["120 g kipfilet", "60 g bulgur", "paprika en rode ui", "olijven", "olijfolie en oregano"], 58, 34, 15, 540, "Alles tegelijk de oven in, ondertussen kook je de bulgur."),
+      ], dagtotaal_kcal: 1630 },
+
+    { dag: "Vrijdag", type: "Rustdag", training: "geen training",
+      maaltijden: [
+        oatsRust("aardbeien"),
+        fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+        M("Lunch", "12:30", "Geroosterde groente-couscous met kikkererwten", ["60 g volkoren couscous", "100 g kikkererwten", "courgette, paprika en aubergine", "citroen, munt en olijfolie"], 58, 14, 12, 450, "Rooster meteen een extra plaat groente voor het weekend."),
+        rauwFeta("15:30"),
+        M("Diner", "18:30", "Griekse gyrosbowl met kip, tzatziki en ovenaardappel", ["120 g kipfilet met gyroskruiden", "250 g aardappel uit de oven", "tzatziki van magere kwark", "komkommer, tomaat en rode ui"], 50, 36, 16, 520, "De tzatziki maak je van je magere kwark met komkommer en knoflook."),
+      ], dagtotaal_kcal: 1580 },
+
+    { dag: "Zaterdag", type: "Trainingsdag", training: "Ochtendloop",
+      fueling: { voor: "Een uur voor je ochtendloop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "Het ontbijt hieronder is meteen je herstel." },
+      maaltijden: [
+        oatsTrain("blauwe bessen"),
+        fruit("11:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+        M("Lunch", "13:00", "Bulgur met gegrilde kip, courgette en feta", ["60 g bulgur", "100 g kipfilet", "gegrilde courgette", "30 g feta", "citroen en olijfolie"], 50, 32, 14, 470, "Gril meteen wat extra courgette voor zondag."),
+        rauwFeta("16:00"),
+        M("Diner", "19:00", "Gegrilde zalm met courgette en bulgur", ["125 g zalmfilet", "60 g bulgur", "courgette", "citroen, dille en olijfolie"], 45, 34, 20, 540, "Zalm geeft je goede vetten voor je herstel."),
+      ], dagtotaal_kcal: 1720 },
+
+    { dag: "Zondag", type: "Rustdag", training: "geen training",
+      maaltijden: [
+        oatsRust("blauwe bessen"),
+        fruit("11:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+        M("Lunch", "13:00", "Spaanse tortilla met aardappel en paprika", ["2 eieren", "150 g gekookte aardappel", "paprika en ui", "tomatensalade ernaast"], 32, 16, 16, 440, "Dé manier om restjes aardappel en groente op te maken."),
+        rauwHummus("16:00"),
+        M("Diner", "18:30", "Geroosterde groente met halloumi en couscous", ["60 g volkoren couscous", "80 g halloumi", "courgette, paprika en rode ui", "citroen, munt en olijfolie"], 55, 22, 21, 500, "Gebruik de groente die je vrijdag extra roosterde."),
+      ], dagtotaal_kcal: 1580 },
+  ],
+};
+
+/* ================================================================== *
+ *  Veilige localStorage (alleen voortgang: afvinken & dagkeuze)
+ * ================================================================== */
+const KEY_CHECK = CONFIG.storeKey + ".check"; // boodschappen afgevinkt
+const KEY_EATEN = CONFIG.storeKey + ".eaten"; // maaltijden afgevinkt per dag
+const KEY_DAY   = CONFIG.storeKey + ".day";   // gekozen dag in de tracker
 
 const store = {
-  get(k, fallback = null) {
-    try { const v = localStorage.getItem(k); return v == null ? fallback : v; }
-    catch { return fallback; }
-  },
-  getJSON(k, fallback = null) {
-    try { const v = localStorage.getItem(k); return v == null ? fallback : JSON.parse(v); }
-    catch { return fallback; }
-  },
+  get(k, fallback = null) { try { const v = localStorage.getItem(k); return v == null ? fallback : v; } catch { return fallback; } },
+  getJSON(k, fallback = null) { try { const v = localStorage.getItem(k); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
   setJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 
 /* ================================================================== *
- *  Intake — de vragenlijst (precies de velden voor Isa)
- *  type: text | number | textarea | choice | multichoice
- * ================================================================== */
-const INTAKE = [
-  { title: "Over jou", icon: "👤", sub: "Vul gewoon in wat klopt, kort mag.", fields: [
-    { key: "naam",     label: "Naam", type: "text", value: CONFIG.athlete, placeholder: "Je naam" },
-    { key: "leeftijd", label: "Leeftijd", type: "number", unit: "jr", placeholder: "bv. 34" },
-    { key: "geslacht", label: "Geslacht", type: "choice", options: ["Vrouw", "Man", "Anders"] },
-    { key: "lengte",   label: "Lengte", type: "number", unit: "cm", placeholder: "bv. 170" },
-    { key: "gewicht",  label: "Gewicht", type: "number", unit: "kg", placeholder: "bv. 65" },
-  ]},
-  { title: "Jouw doel", icon: "🎯", sub: "Waar gaan we voor?", fields: [
-    { key: "doel", label: "Wat wil je vooral?", type: "choice",
-      options: ["Fit blijven", "Afvallen", "Aankomen (spier)", "Beter hardlopen", "Een afstand halen"] },
-    { key: "streefgewicht", label: "Streefgewicht (als je dat hebt)", type: "number", unit: "kg", placeholder: "laat leeg als geen", optional: true },
-    { key: "prestatie", label: "Hoe belangrijk is hardloopprestatie?", type: "choice",
-      options: ["Niet zo", "Best wel", "Heel"] },
-  ]},
-  { title: "Bewegen", icon: "🏃", sub: "Hoe ziet je week eruit?", fields: [
-    { key: "dagenPerWeek", label: "Dagen per week sporten of lopen", type: "number", unit: "dgn", placeholder: "bv. 4" },
-    { key: "kmPerWeek", label: "Ongeveer hoeveel km per week?", type: "text", placeholder: "bv. 25, of 'geen idee'",
-      hint: "Weet je het niet? Schat het, of zet 'geen idee'." },
-    { key: "trainingen", label: "Wat voor trainingen doe je?", type: "multichoice",
-      options: ["Rustige duurloop", "Intervallen", "Lange duurloop", "Kracht", "Anders"], hint: "Meerdere mag." },
-    { key: "werk", label: "Wat voor werk doe je?", type: "choice", options: ["Zittend", "Staand", "Fysiek zwaar"] },
-  ]},
-  { title: "Eten", icon: "🍳", sub: "Zo eet jij het liefst.", fields: [
-    { key: "eetstijl", label: "Eetstijl", type: "choice",
-      options: ["Alles", "Vegetarisch", "Veganistisch", "Pescotarisch"] },
-    { key: "allergie", label: "Allergieën of dingen die je echt niet eet", type: "textarea", placeholder: "bv. lactose, geen vis, niet zo van paprika", optional: true },
-    { key: "maaltijden", label: "Hoeveel maaltijden per dag het liefst?", type: "choice",
-      options: ["3", "3 + snacks", "Meer kleine"] },
-    { key: "trainingsmoment", label: "Wanneer train je meestal?", type: "choice",
-      options: ["Ochtend", "Middag", "Avond"] },
-    { key: "ochtendeten", label: "Eet je makkelijk 's ochtends, of liever later?", type: "choice",
-      options: ["Makkelijk 's ochtends", "Liever later"] },
-  ]},
-  { title: "Praktisch", icon: "🛒", sub: "Zodat het ook echt past.", fields: [
-    { key: "kooktijd", label: "Hoeveel tijd wil je aan koken kwijt?", type: "choice",
-      options: ["Snel (<20 min)", "Normaal", "Ik kook graag uitgebreid"] },
-    { key: "kookniveau", label: "Kookniveau", type: "choice", options: ["Basis", "Gemiddeld", "Gevorderd"] },
-    { key: "budget", label: "Budget", type: "choice", options: ["Op de kleintjes", "Normaal", "Maakt niet uit"] },
-    { key: "personen", label: "Voor hoeveel personen kook je meestal?", type: "number", unit: "pers", placeholder: "bv. 2" },
-  ]},
-  { title: "Persoonlijk", icon: "💬", sub: "Hier maak je het schema écht van jou.", fields: [
-    { key: "uitdaging", label: "Wat is je grootste uitdaging met eten?", type: "textarea", placeholder: "bv. 's avonds snacken, geen tijd, weinig variatie", optional: true },
-    { key: "lievelingseten", label: "Wat eet je het allerliefst?", type: "textarea", placeholder: "bv. pasta, Thais, een goeie boterham", optional: true },
-    { key: "coachweten", label: "Iets wat de coach echt moet weten?", type: "textarea", placeholder: "alles mag", optional: true },
-  ]},
-];
-
-const FIELD_LABELS = {};
-INTAKE.forEach((s) => s.fields.forEach((f) => (FIELD_LABELS[f.key] = f.label)));
-
-/* ================================================================== *
- *  State
+ *  Helpers
  * ================================================================== */
 const $ = (id) => document.getElementById(id);
-let answers = store.getJSON(KEY_INTAKE, {});
-let stepIndex = 0;
-
-/* Vul beginwaarden vanuit de velddefinities (bv. naam = Isa) */
-INTAKE.forEach((s) => s.fields.forEach((f) => {
-  if (answers[f.key] == null && f.value != null) answers[f.key] = f.value;
-}));
-
-/* ================================================================== *
- *  Schermwissel
- * ================================================================== */
-const VIEWS = ["intakeView", "loadingView", "resultView", "emptyView"];
-function showScreen(id) {
-  VIEWS.forEach((v) => $(v).classList.toggle("hidden", v !== id));
-  const showBack = id === "resultView" && !!store.getJSON(KEY_SCHEMA);
-  $("backButton").classList.toggle("hidden", true); // back niet nodig in deze flow
-  window.scrollTo(0, 0);
-  requestAnimationFrame(observeReveals);
-}
-
-/* ================================================================== *
- *  Intake-rendering
- * ================================================================== */
-function startIntake() {
-  $("intakeIntro").classList.add("hidden");
-  $("intakeForm").classList.remove("hidden");
-  stepIndex = 0;
-  renderStep();
-}
-
-function renderStep() {
-  const step = INTAKE[stepIndex];
-  const total = INTAKE.length;
-  $("stepLabel").textContent = `Stap ${stepIndex + 1}`;
-  $("stepCount").textContent = `${stepIndex + 1} / ${total}`;
-  $("progressFill").style.width = `${((stepIndex + 1) / total) * 100}%`;
-  $("stepIcon").textContent = step.icon;
-  $("stepTitle").textContent = step.title;
-  $("stepSub").textContent = step.sub || "";
-
-  $("stepFields").innerHTML = step.fields.map(renderField).join("");
-  wireFields(step);
-
-  $("prevStep").classList.toggle("hidden", stepIndex === 0);
-  $("nextStep").textContent = stepIndex === total - 1 ? "Maak mijn schema 🧡" : "Volgende ›";
-
-  // Stap-kaart opnieuw laten in-poppen
-  const card = document.querySelector(".step-card");
-  if (card) { card.style.animation = "none"; void card.offsetWidth; card.style.animation = ""; }
-}
-
-function renderField(f) {
-  const val = answers[f.key];
-  const hint = f.hint ? `<span class="hint">${f.hint}</span>` : "";
-  let control = "";
-
-  if (f.type === "choice" || f.type === "multichoice") {
-    const sel = f.type === "multichoice" ? (Array.isArray(val) ? val : []) : val;
-    const chips = f.options.map((o) => {
-      const on = f.type === "multichoice" ? sel.includes(o) : sel === o;
-      return `<button type="button" class="chip ${on ? "on" : ""}" data-key="${f.key}" data-val="${esc(o)}" data-multi="${f.type === "multichoice"}">${o}</button>`;
-    }).join("");
-    control = `<div class="chips">${chips}</div>`;
-  } else if (f.type === "textarea") {
-    control = `<textarea data-key="${f.key}" rows="2" placeholder="${esc(f.placeholder || "")}">${esc(val || "")}</textarea>`;
-  } else if (f.type === "number") {
-    control = `<div class="with-unit"><input type="number" inputmode="decimal" data-key="${f.key}" placeholder="${esc(f.placeholder || "")}" value="${esc(val ?? "")}">${f.unit ? `<span class="unit">${f.unit}</span>` : ""}</div>`;
-  } else {
-    control = `<input type="text" data-key="${f.key}" placeholder="${esc(f.placeholder || "")}" value="${esc(val ?? "")}">`;
-  }
-
-  return `<div class="field"><label class="field-label">${f.label}${f.optional ? ' <span style="color:var(--muted);font-weight:500">(mag leeg)</span>' : ""}</label>${control}${hint}</div>`;
-}
-
-function wireFields(step) {
-  $("stepFields").querySelectorAll("input, textarea").forEach((el) => {
-    el.addEventListener("input", () => {
-      answers[el.dataset.key] = el.value;
-      store.setJSON(KEY_INTAKE, answers);
-    });
-  });
-  $("stepFields").querySelectorAll(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const key = chip.dataset.key;
-      const v = chip.dataset.val;
-      if (chip.dataset.multi === "true") {
-        const cur = Array.isArray(answers[key]) ? answers[key] : [];
-        if (cur.includes(v)) answers[key] = cur.filter((x) => x !== v);
-        else answers[key] = [...cur, v];
-        chip.classList.toggle("on");
-      } else {
-        answers[key] = v;
-        chip.parentElement.querySelectorAll(".chip").forEach((c) => c.classList.remove("on"));
-        chip.classList.add("on");
-      }
-      store.setJSON(KEY_INTAKE, answers);
-    });
-  });
-}
-
-function nextStep() {
-  if (stepIndex < INTAKE.length - 1) {
-    stepIndex++;
-    renderStep();
-    window.scrollTo(0, 0);
-  } else {
-    generateSchema();
-  }
-}
-function prevStep() {
-  if (stepIndex > 0) { stepIndex--; renderStep(); window.scrollTo(0, 0); }
-}
-
-/* ================================================================== *
- *  Bericht voor de API opbouwen
- * ================================================================== */
-function buildUserMessage() {
-  const lines = ["Hier is de intake. Maak hier het persoonlijke voedingsschema van.", ""];
-  INTAKE.forEach((step) => {
-    lines.push(`## ${step.title}`);
-    step.fields.forEach((f) => {
-      let v = answers[f.key];
-      if (Array.isArray(v)) v = v.join(", ");
-      v = (v == null || String(v).trim() === "") ? "—" : String(v).trim();
-      let suffix = "";
-      if (f.unit && v !== "—") suffix = ` ${f.unit}`;
-      lines.push(`- ${f.label}: ${v}${suffix}`);
-    });
-    lines.push("");
-  });
-  lines.push(SCHEMA_HINT);
-  return lines.join("\n");
-}
-
-/* ================================================================== *
- *  API-aanroep
- * ================================================================== */
-const LOADING_LINES = [
-  "Ik reken jouw dagdoel uit…",
-  "Je weekmenu samenstellen…",
-  "De trainingsdagen op je loopjes afstemmen…",
-  "Boodschappenlijst voor de week maken…",
-  "Nog even de coachtips erbij…",
-];
-
-async function generateSchema() {
-  const apiKey = store.get(KEY_API, "");
-  if (!apiKey) {
-    toast("Nog geen API-sleutel ingevuld. Open de instellingen ⚙");
-    openSettings();
-    return;
-  }
-  if (!answers.naam || String(answers.naam).trim() === "") {
-    toast("Vul minstens je naam in, dan ga ik los.");
-    stepIndex = 0; startIntake();
-    return;
-  }
-
-  showScreen("loadingView");
-  let li = 0;
-  $("loadingSub").textContent = LOADING_LINES[0];
-  const cycle = setInterval(() => {
-    li = (li + 1) % LOADING_LINES.length;
-    $("loadingSub").textContent = LOADING_LINES[li];
-  }, 2200);
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": apiKey,
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: API_MODEL,
-        max_tokens: API_MAX_TOKENS,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: buildUserMessage() }],
-      }),
-    });
-
-    if (!res.ok) {
-      let detail = "";
-      try { const e = await res.json(); detail = e?.error?.message || ""; } catch {}
-      throw new Error(detail || `Server gaf status ${res.status}`);
-    }
-
-    const data = await res.json();
-    const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
-    const schema = parseSchema(text);
-    if (!schema) throw new Error("Ik kreeg geen leesbaar schema terug. Probeer het nog eens.");
-
-    store.setJSON(KEY_SCHEMA, schema);
-    store.del(KEY_CHECK); store.del(KEY_EATEN); store.del(KEY_DAY); // nieuwe lijst, vinkjes resetten
-    clearInterval(cycle);
-    renderResult(schema);
-    showScreen("resultView");
-  } catch (err) {
-    clearInterval(cycle);
-    console.error(err);
-    const existing = store.getJSON(KEY_SCHEMA);
-    toast("Er ging iets mis: " + (err.message || "onbekende fout"));
-    if (existing) { renderResult(existing); showScreen("resultView"); }
-    else showScreen("intakeView");
-  }
-}
-
-/* JSON uit het antwoord vissen, ook als er per ongeluk tekst omheen staat */
-function parseSchema(text) {
-  if (!text) return null;
-  let t = text.trim();
-  t = t.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
-  try { return JSON.parse(t); } catch {}
-  const first = t.indexOf("{"), last = t.lastIndexOf("}");
-  if (first >= 0 && last > first) {
-    try { return JSON.parse(t.slice(first, last + 1)); } catch {}
-  }
-  return null;
-}
-
-/* ================================================================== *
- *  Resultaat-rendering
- * ================================================================== */
-const COACH_INITIAL = (CONFIG.coachName.replace(/^coach\s+/i, "")[0] || "C").toUpperCase();
-
-/* Tracker-state */
-let RESULT = null;   // huidig schema
-let dayIdx = 0;      // gekozen dagtype-index
-
+const esc = (str) => String(str ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (v) => { if (v == null || v === "") return 0; const n = parseFloat(String(v).replace(",", ".")); return Number.isFinite(n) ? Math.round(n) : 0; };
 const has = (v) => v != null && v !== "";
+const checkId = (cat, item) => (String(cat) + "|" + String(item)).replace(/\s+/g, "_").slice(0, 80);
+
 const mealMacros = (m) => ({ kcal: num(m.kcal), k: num(m.koolhydraten_g), e: num(m.eiwit_g), v: num(m.vet_g) });
 function sumMeals(meals, filter) {
   return (Array.isArray(meals) ? meals : []).reduce((t, m, i) => {
@@ -400,6 +169,7 @@ const isTrainDay = (day) => /training/i.test(day.type || "");
 const DAY_ABBR = { maandag: "Ma", dinsdag: "Di", woensdag: "Wo", donderdag: "Do", vrijdag: "Vr", zaterdag: "Za", zondag: "Zo" };
 const dayAbbr = (naam, i) => DAY_ABBR[String(naam || "").toLowerCase()] || (naam ? String(naam).slice(0, 2) : "D" + (i + 1));
 const todayName = () => ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"][new Date().getDay()];
+
 function eatenForDay(day) { const all = store.getJSON(KEY_EATEN, {}) || {}; return all[dayKey(day)] || {}; }
 function setEaten(day, idx, on) {
   const all = store.getJSON(KEY_EATEN, {}) || {}; const k = dayKey(day);
@@ -423,12 +193,16 @@ function mealPills(m) {
   ].join("");
 }
 
+/* ================================================================== *
+ *  Resultaat-rendering
+ * ================================================================== */
+const COACH_INITIAL = (CONFIG.coachName.replace(/^coach\s+/i, "")[0] || "C").toUpperCase();
+let dayIdx = 0; // gekozen dag-index
+
 function renderResult(s) {
-  RESULT = s;
-  const naam = answers.naam || CONFIG.athlete || "";
   const dagen = Array.isArray(s.dagen) ? s.dagen : [];
 
-  /* gekozen dag herstellen: opgeslagen keuze, anders vandaag, anders dag 1 */
+  /* gekozen dag: opgeslagen keuze, anders vandaag, anders dag 1 */
   dayIdx = 0;
   const savedDay = store.get(KEY_DAY, null);
   let i = savedDay != null ? dagen.findIndex((d) => (d.dag || d.type || "") === savedDay) : -1;
@@ -448,22 +222,22 @@ function renderResult(s) {
         </div>
         <div class="coach-text">
           <span class="coach-name">${esc(CONFIG.coachName)} <span class="coach-handle">${esc(CONFIG.coachHandle)}</span></span>
-          <p class="coach-intro">${esc(s.intro || `Hoi ${naam}, hier is je schema!`)}</p>
+          <p class="coach-intro">${esc(s.intro || `Hoi ${CONFIG.athlete}, hier is je weekmenu!`)}</p>
         </div>
       </div>
       ${s.coachNote ? `<p class="coach-note">${esc(s.coachNote)}</p>` : ""}
     </section>`);
 
-  /* Tracker (Virtuagym-stijl): dagkeuze + calorieën-over + macrobalken */
+  /* Tracker: dagkeuze + calorieën-over ring + macrobalken */
   const dg = s.dagdoel || {};
   html.push(`
     <section class="tracker" id="tracker">
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="week-strip" id="dayToggle">
-        ${dagen.map((d, i) => {
+        ${dagen.map((d, idx) => {
           const cls = isTrainDay(d) ? "is-train" : "is-rest";
-          return `<button type="button" class="day-pill ${cls} ${i === dayIdx ? "on" : ""}" data-day="${i}" title="${esc(d.dag || ("Dag " + (i + 1)))}">
-            <span class="dp-name">${esc(dayAbbr(d.dag, i))}</span>
+          return `<button type="button" class="day-pill ${cls} ${idx === dayIdx ? "on" : ""}" data-day="${idx}" title="${esc(d.dag || ("Dag " + (idx + 1)))}">
+            <span class="dp-name">${esc(dayAbbr(d.dag, idx))}</span>
             <span class="dp-dot" aria-hidden="true"></span>
           </button>`;
         }).join("")}
@@ -488,7 +262,7 @@ function renderResult(s) {
       ${dg.uitleg ? `<p class="daygoal-note">${esc(dg.uitleg)}</p>` : ""}
     </section>`);
 
-  /* Container voor de maaltijden van de gekozen dag (interactief) */
+  /* Maaltijden van de gekozen dag (interactief) */
   html.push(`<section class="day-section" id="daySection"></section>`);
 
   /* Hydratatie & snacks */
@@ -504,7 +278,7 @@ function renderResult(s) {
   /* Boodschappenlijst */
   const lijst = Array.isArray(s.boodschappenlijst) ? s.boodschappenlijst : [];
   if (lijst.length) {
-    const checks = store.getJSON(KEY_CHECK, {});
+    const checks = store.getJSON(KEY_CHECK, {}) || {};
     const cats = lijst.map((cat) => {
       const items = Array.isArray(cat.items) ? cat.items : [];
       const rows = items.map((it) => {
@@ -523,7 +297,7 @@ function renderResult(s) {
     html.push(`
       <section class="tips">
         <h3>Coachtips van ${esc(CONFIG.coachName)}</h3>
-        ${tips.map((t, i) => `<div class="tip-row"><span class="tip-no">${i + 1}</span><span class="tip-text">${esc(t)}</span></div>`).join("")}
+        ${tips.map((t, idx) => `<div class="tip-row"><span class="tip-no">${idx + 1}</span><span class="tip-text">${esc(t)}</span></div>`).join("")}
       </section>`);
   }
 
@@ -541,7 +315,7 @@ function renderResult(s) {
           <div class="meal-body">
             ${m.moment ? `<span class="meal-moment">${esc(m.moment)}</span>` : ""}
             <h4 class="meal-title">${esc(m.titel || "")}</h4>
-            ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+            ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
             <div class="meal-meta">${mealPills(m)}</div>
             ${m.tip ? `<p class="meal-tip">${esc(m.tip)}</p>` : ""}
           </div>
@@ -560,36 +334,31 @@ function renderResult(s) {
   html.push(`
     <div class="result-actions">
       <button class="btn-primary" id="printBtn" type="button">🖨 Print (zwart-wit)</button>
-      <button class="btn-ghost" id="editBtn" type="button">✎ Wijzig antwoorden</button>
-      <button class="btn-ghost" id="regenBtn" type="button">↻ Opnieuw genereren</button>
     </div>`);
 
   $("resultView").innerHTML = html.join("");
   wireResult(s);
   renderDay();
+  requestAnimationFrame(observeReveals);
 }
 
 /* Maaltijden van de gekozen dag tekenen + tracker bijwerken */
 function renderDay() {
-  if (!RESULT) return;
-  const dagen = Array.isArray(RESULT.dagen) ? RESULT.dagen : [];
+  const dagen = Array.isArray(SCHEMA.dagen) ? SCHEMA.dagen : [];
   const day = dagen[dayIdx];
   if (!day) return;
   const isTrain = isTrainDay(day);
   const dc = isTrain ? "day-train" : "day-rest";
 
-  /* Week-pills */
   document.querySelectorAll("#dayToggle .day-pill").forEach((b, i) => b.classList.toggle("on", i === dayIdx));
   const tr = $("tracker");
   if (tr) { tr.classList.remove("day-train", "day-rest"); tr.classList.add(dc); }
 
-  /* Macrobalken (doel = dagtotalen van deze dag) */
   const goals = dayTotals(day);
   const macroBar = (lab, cls, goal) =>
     `<div class="mbar ${cls}"><div class="mbar-top"><span class="mbar-lab">${lab}</span><span class="mbar-val" data-bar="${cls}">0 / ${goal} g</span></div><div class="mbar-track"><div class="mbar-fill" data-fill="${cls}"></div></div></div>`;
   $("macroBars").innerHTML = macroBar("Koolhydraten", "koolh", goals.k) + macroBar("Eiwit", "eiwit", goals.e) + macroBar("Vet", "vet", goals.v);
 
-  /* Maaltijden met afvink-knop */
   const meals = Array.isArray(day.maaltijden) ? day.maaltijden : [];
   const eat = eatenForDay(day);
   const mealsHtml = meals.map((m, i) => {
@@ -636,8 +405,7 @@ function renderDay() {
 
 /* Ring + macrobalken bijwerken op basis van wat is afgevinkt */
 function updateTracker() {
-  if (!RESULT) return;
-  const dagen = Array.isArray(RESULT.dagen) ? RESULT.dagen : [];
+  const dagen = Array.isArray(SCHEMA.dagen) ? SCHEMA.dagen : [];
   const day = dagen[dayIdx];
   if (!day) return;
   const goals = dayTotals(day);
@@ -666,7 +434,7 @@ function updateTracker() {
   setBar("eiwit", eaten.e, goals.e);
   setBar("vet", eaten.v, goals.v);
 
-  const doelKcal = num((RESULT.dagdoel || {}).kcal) || goals.kcal;
+  const doelKcal = num((SCHEMA.dagdoel || {}).kcal) || goals.kcal;
   $("trackerSub").innerHTML = `Gegeten: <strong>${eaten.kcal}</strong> van ${goals.kcal} kcal · dagdoel ${doelKcal} kcal`;
 
   refreshWeekPills();
@@ -674,7 +442,7 @@ function updateTracker() {
 
 /* Dagen die helemaal zijn afgevinkt een vinkje geven in de week-strip */
 function refreshWeekPills() {
-  const dagen = Array.isArray(RESULT && RESULT.dagen) ? RESULT.dagen : [];
+  const dagen = Array.isArray(SCHEMA.dagen) ? SCHEMA.dagen : [];
   document.querySelectorAll("#dayToggle .day-pill").forEach((b, i) => {
     const day = dagen[i];
     if (!day) return;
@@ -688,7 +456,7 @@ function refreshWeekPills() {
 function wireResult(s) {
   const dagen = Array.isArray(s.dagen) ? s.dagen : [];
 
-  /* Dagkeuze in de tracker (week-pills) */
+  /* Dagkeuze (week-pills) */
   const toggle = $("dayToggle");
   if (toggle) toggle.querySelectorAll(".day-pill").forEach((b) => {
     b.addEventListener("click", () => {
@@ -699,11 +467,11 @@ function wireResult(s) {
     });
   });
 
-  /* Boodschappen afvinken (in localStorage) */
+  /* Boodschappen afvinken */
   $("resultView").querySelectorAll(".shop-item").forEach((row) => {
     row.addEventListener("click", () => {
       const id = row.dataset.check;
-      const checks = store.getJSON(KEY_CHECK, {});
+      const checks = store.getJSON(KEY_CHECK, {}) || {};
       const on = !checks[id];
       if (on) checks[id] = true; else delete checks[id];
       store.setJSON(KEY_CHECK, checks);
@@ -713,50 +481,11 @@ function wireResult(s) {
   });
 
   $("printBtn").addEventListener("click", () => window.print());
-  $("editBtn").addEventListener("click", () => {
-    showScreen("intakeView");
-    $("intakeIntro").classList.add("hidden");
-    $("intakeForm").classList.remove("hidden");
-    stepIndex = 0; renderStep();
-  });
-  $("regenBtn").addEventListener("click", () => {
-    if (confirm("Een nieuw schema genereren op basis van je huidige antwoorden?")) generateSchema();
-  });
 }
 
 /* ================================================================== *
- *  Instellingen
+ *  Invliegende beelden
  * ================================================================== */
-function openSettings() {
-  const ov = $("settingsOverlay");
-  $("apiKeyInput").value = store.get(KEY_API, "");
-  ov.classList.remove("hidden", "fade");
-  ov.setAttribute("aria-hidden", "false");
-}
-function closeSettings() {
-  const ov = $("settingsOverlay");
-  ov.classList.add("fade");
-  setTimeout(() => { ov.classList.add("hidden"); ov.setAttribute("aria-hidden", "true"); }, 240);
-}
-
-/* ================================================================== *
- *  Helpers
- * ================================================================== */
-function esc(str) {
-  return String(str ?? "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-function num(v) {
-  if (v == null || v === "") return 0;
-  const n = parseFloat(String(v).replace(",", "."));
-  return Number.isFinite(n) ? Math.round(n) : 0;
-}
-function checkId(cat, item) {
-  return (String(cat) + "|" + String(item)).replace(/\s+/g, "_").slice(0, 80);
-}
-
-/* Invliegende beelden. Alles wat al in beeld staat tonen we meteen;
-   de observer is alleen voor wat je later naar beneden scrollt. */
 let io;
 function inView(el) {
   const r = el.getBoundingClientRect();
@@ -767,22 +496,19 @@ function observeReveals() {
   io = io || new IntersectionObserver((entries) => {
     entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
   }, { threshold: 0.08, rootMargin: "0px 0px -30px 0px" });
-  document.querySelectorAll(".reveal:not(.in)").forEach((el) => {
-    if (inView(el)) el.classList.add("in"); else io.observe(el);
-  });
-  // Vangnet: mocht er iets blijven hangen, na een tel alsnog tonen.
-  setTimeout(() => document.querySelectorAll(".reveal:not(.in)").forEach((el) => {
-    if (inView(el)) el.classList.add("in");
-  }), 700);
+  document.querySelectorAll(".reveal:not(.in)").forEach((el) => { if (inView(el)) el.classList.add("in"); else io.observe(el); });
 }
 
+/* ================================================================== *
+ *  Toast
+ * ================================================================== */
 let toastT;
 function toast(msg) {
   const t = $("toast");
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(toastT);
-  toastT = setTimeout(() => t.classList.remove("show"), 3200);
+  toastT = setTimeout(() => t.classList.remove("show"), 2600);
 }
 
 /* ================================================================== *
@@ -791,62 +517,17 @@ function toast(msg) {
 document.title = `${CONFIG.appName} — bartlopen Voedingscoach`;
 if ($("appName")) $("appName").textContent = CONFIG.appName;
 if ($("brandHandle")) $("brandHandle").textContent = CONFIG.coachHandle;
-if ($("footCredit")) {
-  $("footCredit").innerHTML = `Voeding door ${CONFIG.coachName} · TikTok <strong>${CONFIG.coachHandle}</strong> 🧡`;
-}
+if ($("footCredit")) $("footCredit").innerHTML = `Voeding door ${CONFIG.coachName} · TikTok <strong>${CONFIG.coachHandle}</strong> 🧡`;
 
-/* Knoppen koppelen */
-$("startIntake").addEventListener("click", startIntake);
-$("emptyStart").addEventListener("click", () => { showScreen("intakeView"); startIntake(); });
-$("nextStep").addEventListener("click", nextStep);
-$("prevStep").addEventListener("click", prevStep);
-
-$("settingsButton").addEventListener("click", openSettings);
-$("closeSettings").addEventListener("click", closeSettings);
-$("settingsOverlay").addEventListener("click", (e) => { if (e.target === $("settingsOverlay")) closeSettings(); });
-$("showKey").addEventListener("change", (e) => {
-  $("apiKeyInput").type = e.target.checked ? "text" : "password";
-});
-$("saveSettings").addEventListener("click", () => {
-  const k = $("apiKeyInput").value.trim();
-  if (k) store.set(KEY_API, k); else store.del(KEY_API);
-  toast("Instellingen opgeslagen 💾");
-  closeSettings();
-});
-$("clearData").addEventListener("click", () => {
-  if (confirm("Schema én ingevulde antwoorden wissen? De API-sleutel blijft staan.")) {
-    store.del(KEY_SCHEMA); store.del(KEY_INTAKE); store.del(KEY_CHECK); store.del(KEY_EATEN); store.del(KEY_DAY);
-    answers = {};
-    INTAKE.forEach((s) => s.fields.forEach((f) => { if (f.value != null) answers[f.key] = f.value; }));
-    toast("Gewist. Schoon begin!");
-    closeSettings();
-    $("intakeIntro").classList.remove("hidden");
-    $("intakeForm").classList.add("hidden");
-    showScreen("intakeView");
+$("resetButton").addEventListener("click", () => {
+  if (confirm("Alle afvinkjes (maaltijden en boodschappen) wissen?")) {
+    store.del(KEY_EATEN); store.del(KEY_CHECK);
+    renderResult(SCHEMA);
+    toast("Afvinkjes gewist");
   }
 });
 
-/* Hero-introscherm vullen: naam + ring als flourish laten vollopen */
-function setupIntro() {
-  const naam = (answers.naam && String(answers.naam).trim()) || CONFIG.athlete || "";
-  if ($("introName")) $("introName").textContent = naam || "jij";
-  if ($("introSteps")) $("introSteps").textContent = INTAKE.length;
-  const ring = $("introRing");
-  if (ring) {
-    const r = 52, c = 2 * Math.PI * r;
-    ring.style.strokeDasharray = c;
-    ring.style.strokeDashoffset = c;
-    // Mooie volle ring als accent, net als de hero op de hardloop-homepage.
-    requestAnimationFrame(() => { ring.style.strokeDashoffset = c * 0.04; });
-  }
-}
-
-/* Beginscherm bepalen: bestaand schema -> resultaat, anders intake */
-(function boot() {
-  const saved = store.getJSON(KEY_SCHEMA);
-  if (saved) { renderResult(saved); showScreen("resultView"); }
-  else { setupIntro(); showScreen("intakeView"); }
-})();
+renderResult(SCHEMA);
 
 /* Splash netjes weg laten faden (tikken slaat 'm over) */
 (function () {
