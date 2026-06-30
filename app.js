@@ -33,7 +33,9 @@ Harde regels:
 - Geef echte, smaakvolle recepten met concrete ingrediënten en porties. Geen vage richtlijnen. Kwaliteit van een goede kok, maar haalbaar thuis.
 - Vermeld per maaltijd de koolhydraten, eiwit en vet in gram, plus de kcal. Wees realistisch en consistent: de som van de maaltijden is ongeveer het dagtotaal.
 - Markeer per dag of het een trainingsdag of rustdag is. Geef trainingsdagen fueling voor, tijdens en na, afgestemd op haar training.
-- Respecteer dieet, allergieën en wat iemand niet eet. Overtreed dit nooit, ook niet in een tussendoortje.
+- Respecteer dieet, allergieën en wat iemand niet eet of niet lust. Overtreed dit nooit, ook niet in een tussendoortje.
+- Volg de keukenvoorkeur van deze persoon (bijvoorbeeld mediterraans) in de hele week.
+- Beperk voedselverspilling: laat ingrediënten door de week terugkomen. Gebruik dezelfde bron van eiwit of koolhydraten in meerdere maaltijden en koop slim in, zodat er weinig overblijft.
 - Houd rekening met haar voorkeuren, kooktijd, kookniveau, budget en aantal personen.
 - Maak één boodschappenlijst voor de hele week, gegroepeerd per categorie.
 - Sluit af met minstens 3 korte coachtips in bartlopen-stem.
@@ -535,8 +537,9 @@ function renderResult(s) {
     const mealsHtml = meals.map((m) => {
       const ingr = Array.isArray(m.ingredienten) ? m.ingredienten : [];
       return `<article class="meal">
-          <div class="meal-time"><span class="mt-moment">${esc(m.moment || "")}</span>${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}</div>
+          <div class="meal-time"><span class="mt-icon" aria-hidden="true">🍽️</span>${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}</div>
           <div class="meal-body">
+            ${m.moment ? `<span class="meal-moment">${esc(m.moment)}</span>` : ""}
             <h4 class="meal-title">${esc(m.titel || "")}</h4>
             ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
             <div class="meal-meta">${mealPills(m)}</div>
@@ -593,8 +596,9 @@ function renderDay() {
     const ingr = Array.isArray(m.ingredienten) ? m.ingredienten : [];
     const on = !!eat[i];
     return `<article class="meal ${on ? "eaten" : ""}" data-meal="${i}">
-        <div class="meal-time"><span class="mt-moment">${esc(m.moment || "")}</span>${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}</div>
+        <div class="meal-time"><span class="mt-icon" aria-hidden="true">🍽️</span>${m.tijd ? `<span class="mt-clock">${esc(m.tijd)}</span>` : ""}</div>
         <div class="meal-body">
+          ${m.moment ? `<span class="meal-moment">${esc(m.moment)}</span>` : ""}
           <h4 class="meal-title">${esc(m.titel || "")}</h4>
           ${ingr.length ? `<ul class="meal-ingredients">${ingr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
           <div class="meal-meta">${mealPills(m)}</div>
