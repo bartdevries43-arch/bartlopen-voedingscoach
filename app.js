@@ -8,7 +8,7 @@
    Hergebruik deze app voor iemand anders: kopieer de map, wijzig dit
    blok, vervang coach.jpg en pas het WEEKMENU hieronder aan.          */
 const CONFIG = {
-  appName:     "Jouw weekmenu",
+  appName:     "Isa's weekmenu",
   athlete:     "Isa",
   coachName:   "Coach Bart",
   coachHandle: "@bartlopen",
@@ -131,12 +131,93 @@ const SCHEMA = {
   ],
 };
 
+/* --- Week 2: tweede weekmenu voor afwisseling (zelfde lijn) -------- */
+const WEEK2_DAGEN = [
+  { dag: "Maandag", type: "Trainingsdag", training: "Avondloop 30 min",
+    fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Het is een kort rondje, dus water is genoeg.", na: "Eet binnen het half uur. De pasta hieronder is je herstelmaaltijd." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "12:30", "Griekse orzosalade met feta en olijven", ["70 g orzo", "40 g feta", "tomaat en komkommer", "handje olijven", "citroen, peterselie en olijfolie"], 52, 16, 15, 470, "Orzo is rijstvormige pasta, in 9 minuten gaar."),
+      rauwHummus("15:30"),
+      M("Diner", "19:30", "Volkoren spaghetti met magere bolognese", ["80 g volkoren spaghetti", "100 g mager rundergehakt", "tomatensaus, ui en knoflook", "courgette", "beetje Parmezaan"], 66, 36, 16, 590, "Maak een dubbele saus en vries de helft in."),
+    ], dagtotaal_kcal: 1740 },
+
+  { dag: "Dinsdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("aardbeien"),
+      fruit("10:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+      M("Lunch", "12:30", "Bulgur met geroosterde wortel, feta en granaatappel", ["60 g bulgur", "geroosterde worteltjes", "30 g feta", "granaatappel", "citroen, munt en olijfolie"], 55, 14, 13, 450, "Rooster de wortel uit dezelfde zak als je rauwkost."),
+      rauwHummus("15:30"),
+      M("Diner", "18:30", "Gevulde courgette met rijst, tomaat en feta", ["2 courgettes", "60 g zilvervliesrijst", "tomatensaus en ui", "40 g feta", "oregano"], 55, 16, 14, 470, "Hol de courgette uit, vul en kort de oven in."),
+    ], dagtotaal_kcal: 1540 },
+
+  { dag: "Woensdag", type: "Trainingsdag", training: "Avondloop 30 min",
+    fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "De pasta hieronder is je herstelmaaltijd." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("10:30", "Handje aardbeien en blauwe bessen", ["handje aardbeien", "handje blauwe bessen"], 16, 80),
+      M("Lunch", "12:30", "Rijstbowl met kikkererwten en tahindressing", ["60 g zilvervliesrijst", "100 g kikkererwten", "geroosterde courgette", "tahindressing van tahin en citroen", "peterselie"], 58, 16, 15, 480, "Tahindressing maak je romig met een lepel water."),
+      rauwHummus("15:30"),
+      M("Diner", "19:30", "Volkoren pasta met kip, spinazie en citroen", ["80 g volkoren pasta", "120 g kipfilet", "twee handen spinazie", "citroen en knoflook", "beetje Parmezaan"], 65, 38, 14, 560, "De spinazie slinkt zo mee in de hete pasta."),
+    ], dagtotaal_kcal: 1720 },
+
+  { dag: "Donderdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("blauwe bessen"),
+      fruit("10:30", "Halve granaatappel", ["1/2 granaatappel"], 18, 90),
+      M("Lunch", "12:30", "Couscous met gegrilde kip, paprika en munt", ["60 g volkoren couscous", "100 g kipfilet van woensdag", "gegrilde paprika", "munt en peterselie", "citroen en olijfolie"], 54, 30, 13, 470, "Gebruik de kip die je woensdag extra bakte."),
+      rauwFeta("15:30"),
+      M("Diner", "18:30", "Kabeljauw met witte bonen, tomaat en spinazie", ["150 g kabeljauwfilet", "150 g witte bonen", "tomaat, knoflook en spinazie", "olijfolie", "1 snee volkorenbrood"], 48, 38, 12, 490, "Een mediterrane vischotel, in 20 minuten klaar."),
+    ], dagtotaal_kcal: 1560 },
+
+  { dag: "Vrijdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("aardbeien"),
+      fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "12:30", "Linzensalade met feta, tomaat en rode ui", ["100 g linzen uit blik", "30 g feta", "tomaat en komkommer", "rode ui en peterselie", "citroen en olijfolie"], 55, 18, 13, 470, "Linzen zijn goedkoop, eiwitrijk en mediterraans."),
+      rauwFeta("15:30"),
+      M("Diner", "18:30", "Oven-souvlaki van kip met Griekse salade en pita", ["120 g kipfilet met souvlakikruiden", "1 volkoren pita", "Griekse salade: tomaat, komkommer, feta, olijven", "tzatziki van magere kwark"], 52, 36, 17, 540, "Een vrijdagavondtraktatie, en toch gewoon gezond."),
+    ], dagtotaal_kcal: 1610 },
+
+  { dag: "Zaterdag", type: "Trainingsdag", training: "Ochtendloop",
+    fueling: { voor: "Een uur voor je ochtendloop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "Het ontbijt hieronder is meteen je herstel." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("11:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+      M("Lunch", "13:00", "Tonijn-rijstsalade met olijven en ei", ["60 g zilvervliesrijst", "1 blik tonijn", "1 ei", "olijven, tomaat en rode ui", "peterselie, citroen en olijfolie"], 50, 30, 15, 480, "Stevige lunch na je ochtendloop."),
+      rauwFeta("16:00"),
+      M("Diner", "19:00", "Gegrilde zalm met geroosterde groenten en couscous", ["125 g zalmfilet", "60 g volkoren couscous", "courgette, paprika en rode ui", "citroen, dille en olijfolie"], 50, 34, 20, 560, "Rooster meteen wat extra groente voor zondag."),
+    ], dagtotaal_kcal: 1720 },
+
+  { dag: "Zondag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("blauwe bessen"),
+      fruit("11:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "13:00", "Mediterrane wrap met hummus en kikkererwten", ["2 volkoren wraps", "3 el hummus", "kikkererwten, komkommer en tomaat", "sla en citroen"], 56, 16, 15, 470, "Restjes kikkererwten en groente gaan er zo in."),
+      rauwHummus("16:00"),
+      M("Diner", "18:30", "Traybake met halloumi, kikkererwten en groenten", ["80 g halloumi", "100 g kikkererwten", "courgette, paprika en rode ui", "olijfolie, oregano en citroen"], 40, 26, 24, 500, "Gebruik de groente die je zaterdag extra roosterde."),
+    ], dagtotaal_kcal: 1590 },
+];
+
+const WEEK2_BOODSCHAPPEN = [
+  { categorie: "Groente & fruit", items: ["Tomaat", "Cherrytomaat", "Komkommer", "Worteltjes", "Courgette", "Paprika", "Rode ui", "Ui", "Knoflook", "Spinazie", "Citroen", "Aardbeien", "Blauwe bessen", "Sinaasappel", "Druiven", "Granaatappel", "Sla", "Verse peterselie", "Verse munt", "Verse dille"] },
+  { categorie: "Vlees, vis & eiwit", items: ["Kipfilet", "Kabeljauwfilet", "Zalmfilet", "Tonijn uit blik", "Mager rundergehakt", "Eieren", "Kikkererwten uit blik", "Witte bonen uit blik", "Linzen uit blik", "Halloumi", "Hummus"] },
+  { categorie: "Zuivel", items: ["Magere kwark", "Feta", "Parmezaan"] },
+  { categorie: "Granen & brood", items: ["Havermout", "Orzo", "Volkoren couscous", "Bulgur", "Zilvervliesrijst", "Volkoren spaghetti", "Volkoren wraps", "Volkoren pita", "Volkorenbrood"] },
+  { categorie: "Kast & kruiden", items: ["Olijfolie", "Olijven", "Tahin", "Tomatensaus (passata)", "Honing", "Dadels", "Kaneel", "Oregano", "Souvlakikruiden", "Paprikapoeder", "Pompoenpitten"] },
+];
+
+const SCHEMA2 = Object.assign({}, SCHEMA, { dagen: WEEK2_DAGEN, boodschappenlijst: WEEK2_BOODSCHAPPEN });
+const WEKEN = [SCHEMA, SCHEMA2];
+
 /* ================================================================== *
  *  Veilige localStorage (alleen voortgang: afvinken & dagkeuze)
  * ================================================================== */
 const KEY_CHECK = CONFIG.storeKey + ".check"; // boodschappen afgevinkt
 const KEY_EATEN = CONFIG.storeKey + ".eaten"; // maaltijden afgevinkt per dag
 const KEY_DAY   = CONFIG.storeKey + ".day";   // gekozen dag in de tracker
+const KEY_WEEK  = CONFIG.storeKey + ".week";  // gekozen week (1 of 2)
 
 const store = {
   get(k, fallback = null) { try { const v = localStorage.getItem(k); return v == null ? fallback : v; } catch { return fallback; } },
@@ -164,7 +245,7 @@ function sumMeals(meals, filter) {
   }, { kcal: 0, k: 0, e: 0, v: 0 });
 }
 const dayTotals = (day) => sumMeals(day.maaltijden);
-const dayKey = (day) => day.dag || day.type || ("dag" + dayIdx);
+const dayKey = (day) => "w" + weekIdx + "·" + (day.dag || day.type || ("dag" + dayIdx));
 const isTrainDay = (day) => /training/i.test(day.type || "");
 const DAY_ABBR = { maandag: "Ma", dinsdag: "Di", woensdag: "Wo", donderdag: "Do", vrijdag: "Vr", zaterdag: "Za", zondag: "Zo" };
 const dayAbbr = (naam, i) => DAY_ABBR[String(naam || "").toLowerCase()] || (naam ? String(naam).slice(0, 2) : "D" + (i + 1));
@@ -199,7 +280,22 @@ function mealPills(m) {
 const COACH_INITIAL = (CONFIG.coachName.replace(/^coach\s+/i, "")[0] || "C").toUpperCase();
 let dayIdx = 0; // gekozen dag-index
 
+/* Week-keuze: opgeslagen voorkeur, anders wisselt 'ie automatisch per kalenderweek */
+function weekNumber(d = new Date()) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - yearStart) / 864e5 + 1) / 7);
+}
+let weekIdx = (() => {
+  const saved = store.get(KEY_WEEK, null);
+  if (saved === "0" || saved === "1") return +saved;
+  return weekNumber() % 2; // even week -> week 1, oneven -> week 2
+})();
+let ACTIVE = WEKEN[weekIdx] || WEKEN[0];
+
 function renderResult(s) {
+  ACTIVE = s;
   const dagen = Array.isArray(s.dagen) ? s.dagen : [];
 
   /* gekozen dag: opgeslagen keuze, anders vandaag, anders dag 1 */
@@ -233,6 +329,9 @@ function renderResult(s) {
   html.push(`
     <section class="tracker" id="tracker">
       <div class="hero-glow" aria-hidden="true"></div>
+      <div class="week-switch" id="weekSwitch">
+        ${WEKEN.map((w, idx) => `<button type="button" class="wk-tab ${idx === weekIdx ? "on" : ""}" data-week="${idx}">Week ${idx + 1}</button>`).join("")}
+      </div>
       <div class="week-strip" id="dayToggle">
         ${dagen.map((d, idx) => {
           const cls = isTrainDay(d) ? "is-train" : "is-rest";
@@ -252,6 +351,7 @@ function renderResult(s) {
               </linearGradient>
             </defs>
             <circle class="ring-bg" cx="60" cy="60" r="52" />
+            <circle class="ring-ghost" cx="60" cy="60" r="52" />
             <circle class="ring-fg" id="calRing" cx="60" cy="60" r="52" />
           </svg>
           <div class="ring-label"><strong id="calLeft">–</strong><span id="calLeftLab">kcal over</span></div>
@@ -262,6 +362,9 @@ function renderResult(s) {
       ${dg.uitleg ? `<p class="daygoal-note">${esc(dg.uitleg)}</p>` : ""}
     </section>`);
 
+  /* Porties-note */
+  html.push(`<p class="portie-note">Porties zijn per persoon. Kook je voor twee, verdubbel dan alles.</p>`);
+
   /* Maaltijden van de gekozen dag (interactief) */
   html.push(`<section class="day-section" id="daySection"></section>`);
 
@@ -271,24 +374,31 @@ function renderResult(s) {
     html.push(`
       <div class="mini-grid">
         ${s.hydratatie ? `<div class="mini-card"><h4>💧 Hydratatie</h4><p>${esc(s.hydratatie)}</p></div>` : ""}
-        ${snacks.length ? `<div class="mini-card"><h4>🍎 Snacks</h4><ul>${snacks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+        ${snacks.length ? `<div class="mini-card"><h4>🥕 Snacks</h4><ul>${snacks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
       </div>`);
   }
 
-  /* Boodschappenlijst */
+  /* Boodschappenlijst (per week eigen afvinkstatus) */
   const lijst = Array.isArray(s.boodschappenlijst) ? s.boodschappenlijst : [];
   if (lijst.length) {
     const checks = store.getJSON(KEY_CHECK, {}) || {};
     const cats = lijst.map((cat) => {
       const items = Array.isArray(cat.items) ? cat.items : [];
       const rows = items.map((it) => {
-        const id = checkId(cat.categorie, it);
+        const id = checkId("w" + weekIdx + "·" + cat.categorie, it);
         const on = !!checks[id];
         return `<div class="shop-item ${on ? "checked" : ""}" data-check="${esc(id)}"><span class="shop-box">${on ? "✓" : ""}</span><span class="shop-text">${esc(it)}</span></div>`;
       }).join("");
       return `<div class="shop-cat"><h4>${esc(cat.categorie || "")}</h4>${rows}</div>`;
     }).join("");
-    html.push(`<section class="shopping"><h3>🛒 Boodschappenlijst</h3>${cats}</section>`);
+    html.push(`
+      <section class="shopping">
+        <div class="shop-head">
+          <h3>🛒 Boodschappen <span class="shop-count" id="shopCount"></span></h3>
+          <button class="shop-clear" id="shopClear" type="button">Lijst legen</button>
+        </div>
+        ${cats}
+      </section>`);
   }
 
   /* Coachtips */
@@ -344,7 +454,7 @@ function renderResult(s) {
 
 /* Maaltijden van de gekozen dag tekenen + tracker bijwerken */
 function renderDay() {
-  const dagen = Array.isArray(SCHEMA.dagen) ? SCHEMA.dagen : [];
+  const dagen = Array.isArray(ACTIVE.dagen) ? ACTIVE.dagen : [];
   const day = dagen[dayIdx];
   if (!day) return;
   const isTrain = isTrainDay(day);
@@ -405,7 +515,7 @@ function renderDay() {
 
 /* Ring + macrobalken bijwerken op basis van wat is afgevinkt */
 function updateTracker() {
-  const dagen = Array.isArray(SCHEMA.dagen) ? SCHEMA.dagen : [];
+  const dagen = Array.isArray(ACTIVE.dagen) ? ACTIVE.dagen : [];
   const day = dagen[dayIdx];
   if (!day) return;
   const goals = dayTotals(day);
@@ -434,7 +544,7 @@ function updateTracker() {
   setBar("eiwit", eaten.e, goals.e);
   setBar("vet", eaten.v, goals.v);
 
-  const doelKcal = num((SCHEMA.dagdoel || {}).kcal) || goals.kcal;
+  const doelKcal = num((ACTIVE.dagdoel || {}).kcal) || goals.kcal;
   $("trackerSub").innerHTML = `Gegeten: <strong>${eaten.kcal}</strong> van ${goals.kcal} kcal · dagdoel ${doelKcal} kcal`;
 
   refreshWeekPills();
@@ -442,7 +552,7 @@ function updateTracker() {
 
 /* Dagen die helemaal zijn afgevinkt een vinkje geven in de week-strip */
 function refreshWeekPills() {
-  const dagen = Array.isArray(SCHEMA.dagen) ? SCHEMA.dagen : [];
+  const dagen = Array.isArray(ACTIVE.dagen) ? ACTIVE.dagen : [];
   document.querySelectorAll("#dayToggle .day-pill").forEach((b, i) => {
     const day = dagen[i];
     if (!day) return;
@@ -456,6 +566,18 @@ function refreshWeekPills() {
 function wireResult(s) {
   const dagen = Array.isArray(s.dagen) ? s.dagen : [];
 
+  /* Weekkeuze (Week 1 / Week 2) */
+  const wsw = $("weekSwitch");
+  if (wsw) wsw.querySelectorAll(".wk-tab").forEach((b) => {
+    b.addEventListener("click", () => {
+      const wi = +b.dataset.week;
+      if (wi === weekIdx) return;
+      weekIdx = wi;
+      store.set(KEY_WEEK, String(weekIdx));
+      renderResult(WEKEN[weekIdx]);
+    });
+  });
+
   /* Dagkeuze (week-pills) */
   const toggle = $("dayToggle");
   if (toggle) toggle.querySelectorAll(".day-pill").forEach((b) => {
@@ -467,7 +589,12 @@ function wireResult(s) {
     });
   });
 
-  /* Boodschappen afvinken */
+  /* Boodschappen afvinken + teller */
+  const updateShopCount = () => {
+    const rows = $("resultView").querySelectorAll(".shop-item");
+    const done = $("resultView").querySelectorAll(".shop-item.checked").length;
+    if ($("shopCount")) $("shopCount").textContent = `${done}/${rows.length}`;
+  };
   $("resultView").querySelectorAll(".shop-item").forEach((row) => {
     row.addEventListener("click", () => {
       const id = row.dataset.check;
@@ -477,7 +604,23 @@ function wireResult(s) {
       store.setJSON(KEY_CHECK, checks);
       row.classList.toggle("checked", on);
       row.querySelector(".shop-box").textContent = on ? "✓" : "";
+      updateShopCount();
     });
+  });
+  updateShopCount();
+
+  /* Lijst legen (alleen deze week) */
+  const clearBtn = $("shopClear");
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    const checks = store.getJSON(KEY_CHECK, {}) || {};
+    $("resultView").querySelectorAll(".shop-item").forEach((row) => {
+      delete checks[row.dataset.check];
+      row.classList.remove("checked");
+      row.querySelector(".shop-box").textContent = "";
+    });
+    store.setJSON(KEY_CHECK, checks);
+    updateShopCount();
+    toast("Lijst geleegd");
   });
 
   $("printBtn").addEventListener("click", () => window.print());
@@ -522,12 +665,12 @@ if ($("footCredit")) $("footCredit").innerHTML = `Voeding door ${CONFIG.coachNam
 $("resetButton").addEventListener("click", () => {
   if (confirm("Alle afvinkjes (maaltijden en boodschappen) wissen?")) {
     store.del(KEY_EATEN); store.del(KEY_CHECK);
-    renderResult(SCHEMA);
+    renderResult(WEKEN[weekIdx]);
     toast("Afvinkjes gewist");
   }
 });
 
-renderResult(SCHEMA);
+renderResult(WEKEN[weekIdx]);
 
 /* Splash netjes weg laten faden (tikken slaat 'm over) */
 (function () {

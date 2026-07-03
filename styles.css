@@ -259,6 +259,20 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .tracker.day-rest  { --dc: var(--violet); }
 .tracker.day-train { --dc: var(--volt); }
 
+.week-switch {
+  position: relative; display: flex; gap: 6px; padding: 5px; margin-bottom: 14px;
+  border-radius: 999px; background: var(--bg-0); border: 1px solid var(--line);
+}
+.wk-tab {
+  flex: 1; padding: 9px 8px; border: none; border-radius: 999px; background: transparent;
+  color: var(--muted); font-weight: 800; font-size: 0.84rem;
+  transition: color 0.2s, background 0.25s var(--spring), box-shadow 0.2s;
+}
+.wk-tab.on { background: linear-gradient(150deg, var(--volt), var(--flame)); color: var(--volt-ink); box-shadow: 0 6px 16px rgba(255, 45, 120, 0.28); }
+
+.portie-note { margin: -4px 6px 16px; color: var(--muted); font-size: 0.82rem; font-weight: 600; line-height: 1.4; }
+.portie-note::before { content: "🍽️ "; }
+
 .week-strip {
   position: relative; display: flex; gap: 6px; margin-bottom: 18px;
   padding: 2px 0 8px;
@@ -325,6 +339,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   filter: drop-shadow(0 0 5px rgba(255, 80, 120, 0.45));
   transition: stroke-dashoffset 1s var(--spring);
 }
+.ring-ghost { fill: none; stroke: url(#ringGrad); stroke-width: 10; opacity: 0.14; }
 .ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 .ring-label strong { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .ring-label span { display: block; font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
@@ -384,9 +399,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .meal-time {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  border-radius: 12px; padding: 8px 2px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border-radius: 12px; padding: 12px 2px;
   background: color-mix(in srgb, var(--dc, var(--volt)) 16%, transparent); color: var(--dc, var(--volt));
+  align-self: start;
 }
 .meal-time .mt-icon { font-size: 0.9rem; line-height: 1; opacity: 0.9; }
 .meal-time .mt-clock { font-size: 0.95rem; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -440,6 +456,11 @@ h1, h2, h3, h4, p { margin-top: 0; }
 /* ---------- Boodschappenlijst ---------- */
 .shopping { padding: 18px; border-radius: var(--radius-lg); border: 1px solid var(--line); background: var(--card); margin-bottom: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 14px 34px rgba(0,0,0,0.38); }
 .shopping > h3 { margin: 0 0 14px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.shop-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.shop-head h3 { margin: 0; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.shop-count { color: var(--muted); font-weight: 700; font-size: 0.72rem; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.shop-clear { flex: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card-2); color: var(--muted); font-weight: 700; font-size: 0.76rem; transition: color 0.2s, border-color 0.2s; }
+.shop-clear:hover { color: var(--volt); border-color: color-mix(in srgb, var(--volt) 40%, transparent); }
 .shop-cat { margin-bottom: 14px; }
 .shop-cat:last-child { margin-bottom: 0; }
 .shop-cat h4 { margin: 0 0 8px; font-size: 0.8rem; font-weight: 800; color: var(--volt); }
@@ -585,7 +606,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   }
   .topbar, .foot, #settingsOverlay, .toast, .result-actions, .splash,
   #intakeView, #loadingView, #emptyView, .hero-glow, .brand-logo,
-  #tracker, #daySection, .week-strip, .meal-log { display: none !important; }
+  #tracker, #daySection, .week-strip, .week-switch, .meal-log, .shop-clear, .portie-note { display: none !important; }
   .print-only { display: block !important; }
   .app-shell { width: 100%; max-width: 100%; padding: 0; margin: 0; }
 

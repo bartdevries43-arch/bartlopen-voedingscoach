@@ -1,7 +1,7 @@
 {
-  "name": "bartlopen Voedingscoach",
-  "short_name": "Voedingscoach",
-  "description": "Jouw persoonlijke voedingsschema, gemaakt door de voedingscoach van @bartlopen.",
+  "name": "Isa's weekmenu — bartlopen",
+  "short_name": "Isa's week",
+  "description": "Isa's persoonlijke weekmenu van de voedingscoach van @bartlopen.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
