@@ -37,7 +37,7 @@ const rauwFeta = (tijd) => M("Tussendoor", tijd, "Rauwkost met een blokje feta",
  *  Mediterraans, geen melk, geen banaan, allergieproof, weinig verspilling.
  * ================================================================== */
 const SCHEMA = {
-  intro: "Hoi Isa! Hier is je week. Mediterraans, vol smaak en makkelijk vol te houden. We gaan stap voor stap richting je doel.",
+  intro: "Hoi Isa! Hier is je week: mediterraans, vol smaak en makkelijk vol te houden.",
   coachNote: "Een halve kilo per week, zonder honger. Jij kunt dit.",
   dagdoel: { kcal: 1650, koolhydraten_g: 175, eiwit_g: 95, vet_g: 60, uitleg: "Genoeg om je te voeden, met een lichte min zodat je rustig afvalt." },
   hydratatie: "Drink 1,5 tot 2 liter water per dag. Rond je looptjes een extra glas, voor en na.",
@@ -335,7 +335,8 @@ function renderResult(s) {
       <div class="week-strip" id="dayToggle">
         ${dagen.map((d, idx) => {
           const cls = isTrainDay(d) ? "is-train" : "is-rest";
-          return `<button type="button" class="day-pill ${cls} ${idx === dayIdx ? "on" : ""}" data-day="${idx}" title="${esc(d.dag || ("Dag " + (idx + 1)))}">
+          const today = String(d.dag || "").toLowerCase() === todayName() ? " is-today" : "";
+          return `<button type="button" class="day-pill ${cls}${today} ${idx === dayIdx ? "on" : ""}" data-day="${idx}" title="${esc(d.dag || ("Dag " + (idx + 1)))}">
             <span class="dp-name">${esc(dayAbbr(d.dag, idx))}</span>
             <span class="dp-dot" aria-hidden="true"></span>
           </button>`;
@@ -488,12 +489,13 @@ function renderDay() {
   }).join("");
 
   const sub = [day.type, (day.training && !/^geen/i.test(day.training)) ? day.training : ""].filter(Boolean).map(esc).join(" · ");
+  const isToday = String(day.dag || "").toLowerCase() === todayName();
   const ds = $("daySection");
   ds.className = `day-section ${dc}`;
   ds.innerHTML = `
     <div class="day-head">
       <span class="day-badge">${isTrain ? "🏃" : "🌿"}</span>
-      <div class="day-head-text"><h3>${esc(day.dag || day.type || "Dag")}</h3>${sub ? `<span>${sub}</span>` : ""}</div>
+      <div class="day-head-text"><h3>${esc(day.dag || day.type || "Dag")}${isToday ? `<span class="today-tag">Vandaag</span>` : ""}</h3>${sub ? `<span>${sub}</span>` : ""}</div>
     </div>
     ${fuelingHTML(day)}
     ${mealsHtml}`;

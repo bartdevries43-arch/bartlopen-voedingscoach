@@ -1,12 +1,12 @@
 /* Offline-cache voor de Voedingscoach.
    Netwerk-eerst voor eigen bestanden, zodat updates altijd doorkomen;
    valt terug op cache als je offline bent. Verhoog CACHE bij elke update. */
-const CACHE = "voedingscoach-v9";
+const CACHE = "voedingscoach-v10";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=9",
-  "./app.js?v=9",
+  "./styles.css?v=10",
+  "./app.js?v=10",
   "./coach.jpg",
   "./icon-192.png",
   "./icon-512.png",

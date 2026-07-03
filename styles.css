@@ -246,7 +246,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .coach-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .coach-text .coach-name { font-size: 0.8rem; color: var(--volt); font-weight: 800; letter-spacing: 0.02em; }
 .coach-handle { color: var(--muted); font-weight: 700; }
-.coach-text .coach-intro { margin: 0; font-weight: 700; font-size: 0.98rem; line-height: 1.4; }
+.coach-text .coach-intro { margin: 0; font-weight: 700; font-size: 0.94rem; line-height: 1.35; }
+.result-hero { padding: 18px; }
+.coach-note { margin-top: 12px; font-size: 0.9rem; }
+.today-tag { display: inline-block; margin-left: 8px; padding: 3px 9px; border-radius: 999px; background: linear-gradient(150deg, var(--volt), var(--flame)); color: var(--volt-ink); font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
 .coach-note { position: relative; margin: 14px 0 0; color: var(--muted); font-size: 0.96rem; line-height: 1.5; }
 
 /* ---------- Tracker (Virtuagym-stijl) ---------- */
@@ -293,6 +296,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .day-pill.is-train.on { background: linear-gradient(160deg, var(--volt), var(--flame)); color: var(--volt-ink); box-shadow: 0 6px 16px rgba(255, 45, 120, 0.32); }
 .day-pill.is-rest.on  { background: linear-gradient(160deg, var(--azure), var(--violet)); color: #1c1024; box-shadow: 0 6px 16px rgba(185, 107, 255, 0.32); }
 .day-pill.on .dp-dot { background: rgba(0, 0, 0, 0.45); }
+.day-pill.is-today:not(.on) { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--pc) 60%, transparent); }
 .day-pill.done .dp-dot { width: 14px; height: 14px; background: var(--pc); display: grid; place-items: center; }
 .day-pill.done .dp-dot::after { content: "✓"; font-size: 0.62rem; font-weight: 900; color: var(--bg-0); line-height: 1; }
 .day-pill.on.done .dp-dot { background: rgba(0, 0, 0, 0.5); }
@@ -309,6 +313,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .mbar-val { font-size: 0.76rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 .mbar-track { height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.09); overflow: hidden; }
 .mbar-fill { height: 100%; width: 0; border-radius: 999px; transition: width 0.7s var(--spring); }
+.mbar.koolh .mbar-track { background: color-mix(in srgb, var(--volt) 14%, rgba(255, 255, 255, 0.06)); }
+.mbar.eiwit .mbar-track { background: color-mix(in srgb, var(--flame) 14%, rgba(255, 255, 255, 0.06)); }
+.mbar.vet .mbar-track   { background: color-mix(in srgb, var(--azure) 14%, rgba(255, 255, 255, 0.06)); }
 .mbar.koolh .mbar-lab  { color: var(--volt); }
 .mbar.koolh .mbar-fill { background: linear-gradient(90deg, #ff9a3d, var(--volt)); }
 .mbar.eiwit .mbar-lab  { color: var(--flame); }
