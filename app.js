@@ -209,7 +209,162 @@ const WEEK2_BOODSCHAPPEN = [
 ];
 
 const SCHEMA2 = Object.assign({}, SCHEMA, { dagen: WEEK2_DAGEN, boodschappenlijst: WEEK2_BOODSCHAPPEN });
-const WEKEN = [SCHEMA, SCHEMA2];
+
+/* --- Week 3: derde weekmenu (zelfde lijn, nieuwe mediterrane gerechten) -- */
+const WEEK3_DAGEN = [
+  { dag: "Maandag", type: "Trainingsdag", training: "Avondloop 30 min",
+    fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Het is een kort rondje, dus water is genoeg.", na: "Eet binnen het half uur. De pasta hieronder is je herstelmaaltijd." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "12:30", "Quinoasalade met geroosterde pompoen, feta en granaatappel", ["60 g quinoa", "150 g pompoen", "30 g feta", "granaatappel", "rode ui, citroen en olijfolie"], 48, 15, 15, 450, "Rooster meteen wat extra pompoen voor woensdag."),
+      rauwHummus("15:30"),
+      M("Diner", "19:30", "Volkoren pasta met tonijn, cherrytomaat en spinazie", ["80 g volkoren pasta", "1 blik tonijn, uitgelekt", "cherrytomaat en twee handen spinazie", "knoflook, citroen en olijfolie"], 66, 34, 14, 560, "De spinazie slinkt zo mee in de hete pasta."),
+    ], dagtotaal_kcal: 1730 },
+
+  { dag: "Dinsdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("aardbeien"),
+      fruit("10:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+      M("Lunch", "12:30", "Griekse gigantes: witte bonen in tomatensaus met feta", ["150 g witte bonen", "tomatensaus, ui en knoflook", "30 g feta", "peterselie en olijfolie", "1 snee volkorenbrood"], 52, 18, 13, 450, "Bewaar de rest van de bonen voor vrijdag."),
+      rauwHummus("15:30"),
+      M("Diner", "18:30", "Kabeljauw met venkel, tomaat en krieltjes uit de oven", ["150 g kabeljauwfilet", "250 g krieltjes", "venkel en cherrytomaat", "knoflook, citroen en olijfolie"], 45, 35, 13, 470, "Alles op een bakplaat, dus weinig afwas."),
+    ], dagtotaal_kcal: 1540 },
+
+  { dag: "Woensdag", type: "Trainingsdag", training: "Avondloop 30 min",
+    fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "De pasta hieronder is je herstelmaaltijd." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("10:30", "Handje aardbeien en frambozen", ["handje aardbeien", "handje frambozen"], 16, 80),
+      M("Lunch", "12:30", "Couscous met geroosterde pompoen, kikkererwten en munt", ["60 g volkoren couscous", "geroosterde pompoen van maandag", "100 g kikkererwten", "munt en peterselie", "citroen en olijfolie"], 54, 15, 13, 460, "Gebruik de pompoen die je maandag extra roosterde."),
+      rauwHummus("15:30"),
+      M("Diner", "19:30", "Volkoren pasta met kip, courgette en citroen", ["80 g volkoren pasta", "120 g kipfilet", "courgette", "citroen, knoflook en olijfolie", "beetje Parmezaan"], 65, 38, 14, 560, "Bak meteen 100 g kip extra voor donderdag."),
+    ], dagtotaal_kcal: 1720 },
+
+  { dag: "Donderdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("blauwe bessen"),
+      fruit("10:30", "Halve granaatappel", ["1/2 granaatappel"], 18, 90),
+      M("Lunch", "12:30", "Bulgur met kip, geroosterde paprika en feta", ["60 g bulgur", "100 g kipfilet van woensdag", "geroosterde paprika", "30 g feta", "citroen en olijfolie"], 54, 30, 13, 470, "Gebruik de kip die je woensdag extra bakte."),
+      rauwFeta("15:30"),
+      M("Diner", "18:30", "Mediterrane linzensoep met tomaat en wortel", ["100 g linzen", "tomaat, wortel, ui en knoflook", "olijfolie, laurier en komijn", "1 snee volkorenbrood"], 55, 20, 12, 470, "Maak een grote pan, morgen is de soep nog lekkerder."),
+    ], dagtotaal_kcal: 1560 },
+
+  { dag: "Vrijdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("aardbeien"),
+      fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "12:30", "Rijstsalade met witte bonen, tomaat en olijven", ["60 g zilvervliesrijst", "150 g witte bonen", "tomaat en komkommer", "olijven, rode ui en peterselie", "citroen en olijfolie"], 58, 16, 13, 460, "Witte bonen uit hetzelfde blik als dinsdag."),
+      rauwFeta("15:30"),
+      M("Diner", "18:30", "Shakshuka: eieren in tomaten-paprikasaus", ["2 eieren", "tomatensaus, paprika, ui en knoflook", "paprikapoeder en komijn", "1 snee volkorenbrood"], 48, 22, 18, 480, "Een klassieker uit een pan, klaar in een kwartier."),
+    ], dagtotaal_kcal: 1580 },
+
+  { dag: "Zaterdag", type: "Trainingsdag", training: "Ochtendloop",
+    fueling: { voor: "Een uur voor je ochtendloop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "De lunch hieronder is meteen je herstel." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("11:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+      M("Lunch", "13:00", "Tonijn-quinoasalade met olijven, ei en tomaat", ["60 g quinoa", "1 blik tonijn", "1 ei", "olijven, tomaat en rode ui", "peterselie, citroen en olijfolie"], 48, 30, 16, 480, "Stevige lunch na je ochtendloop."),
+      rauwFeta("16:00"),
+      M("Diner", "19:00", "Gegrilde zalm met sperziebonen en krieltjes", ["125 g zalmfilet", "200 g krieltjes", "sperziebonen", "citroen, dille en olijfolie"], 45, 34, 20, 550, "Zalm geeft je goede vetten voor je herstel."),
+    ], dagtotaal_kcal: 1720 },
+
+  { dag: "Zondag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("blauwe bessen"),
+      fruit("11:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "13:00", "Mediterrane frittata met courgette, tomaat en feta", ["3 eieren", "courgette en cherrytomaat", "30 g feta", "verse kruiden", "groene salade ernaast"], 30, 20, 17, 440, "De manier om restjes groente op te maken."),
+      rauwHummus("16:00"),
+      M("Diner", "18:30", "Gemista: gevulde paprika met rijst, tomaat en feta", ["2 paprika's", "60 g zilvervliesrijst", "tomaat, ui en knoflook", "30 g feta", "munt en oregano"], 55, 16, 15, 490, "Vul de paprika, en dan de oven in."),
+    ], dagtotaal_kcal: 1580 },
+];
+const WEEK3_BOODSCHAPPEN = [
+  { categorie: "Groente & fruit", items: ["Cherrytomaat", "Tomaat", "Komkommer", "Worteltjes", "Courgette", "Paprika", "Pompoen", "Venkel", "Sperziebonen", "Spinazie", "Rode ui", "Ui", "Knoflook", "Citroen", "Aardbeien", "Frambozen", "Blauwe bessen", "Sinaasappel", "Druiven", "Granaatappel", "Groene salade", "Verse peterselie", "Verse munt", "Verse dille"] },
+  { categorie: "Vlees, vis & eiwit", items: ["Kipfilet", "Kabeljauwfilet", "Zalmfilet", "Tonijn uit blik", "Eieren", "Kikkererwten uit blik", "Witte bonen uit blik", "Linzen", "Hummus"] },
+  { categorie: "Zuivel", items: ["Magere kwark", "Feta", "Parmezaan"] },
+  { categorie: "Granen & brood", items: ["Havermout", "Quinoa", "Volkoren couscous", "Bulgur", "Zilvervliesrijst", "Volkoren pasta", "Volkorenbrood", "Krieltjes"] },
+  { categorie: "Kast & kruiden", items: ["Olijfolie", "Olijven", "Tahin", "Tomatensaus (passata)", "Honing", "Dadels", "Kaneel", "Komijn", "Paprikapoeder", "Oregano", "Laurier", "Pompoenpitten"] },
+];
+const SCHEMA3 = Object.assign({}, SCHEMA, { dagen: WEEK3_DAGEN, boodschappenlijst: WEEK3_BOODSCHAPPEN });
+
+/* --- Week 4: vierde weekmenu (zelfde lijn, nieuwe mediterrane gerechten) - */
+const WEEK4_DAGEN = [
+  { dag: "Maandag", type: "Trainingsdag", training: "Avondloop 30 min",
+    fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Het is een kort rondje, dus water is genoeg.", na: "Eet binnen het half uur. De pasta hieronder is je herstelmaaltijd." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("10:30", "Twee mandarijnen", ["2 mandarijnen"], 18, 90),
+      M("Lunch", "12:30", "Orzosalade met courgette, feta en munt", ["70 g orzo", "gegrilde courgette", "30 g feta", "munt en peterselie", "citroen en olijfolie"], 52, 16, 15, 460, "Maak meteen een dubbele portie voor woensdag."),
+      rauwHummus("15:30"),
+      M("Diner", "19:30", "Volkoren pasta met kip-kofta in tomatensaus", ["80 g volkoren pasta", "120 g kipgehakt met komijn en paprikapoeder", "tomatensaus, ui en knoflook", "peterselie", "beetje Parmezaan"], 66, 36, 16, 580, "Draai de balletjes klein, dan garen ze snel."),
+    ], dagtotaal_kcal: 1740 },
+
+  { dag: "Dinsdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("aardbeien"),
+      fruit("10:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+      M("Lunch", "12:30", "Bulgur met geroosterde biet, feta en peterselie", ["60 g bulgur", "geroosterde rode biet", "30 g feta", "rode ui en peterselie", "citroen en olijfolie"], 55, 14, 13, 450, "Rode biet geeft kleur en een zoetje."),
+      rauwHummus("15:30"),
+      M("Diner", "18:30", "Kabeljauw met witte bonen, spinazie en tomaat", ["150 g kabeljauwfilet", "150 g witte bonen", "tomaat, knoflook en spinazie", "olijfolie", "1 snee volkorenbrood"], 48, 38, 12, 490, "Een mediterrane vischotel in 20 minuten."),
+    ], dagtotaal_kcal: 1540 },
+
+  { dag: "Woensdag", type: "Trainingsdag", training: "Avondloop 30 min",
+    fueling: { voor: "Een uur voor je loop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "De pasta hieronder is je herstelmaaltijd." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("10:30", "Handje aardbeien en blauwe bessen", ["handje aardbeien", "handje blauwe bessen"], 16, 80),
+      M("Lunch", "12:30", "Orzo met kip, paprika en feta", ["70 g orzo van maandag", "100 g kipfilet", "geroosterde paprika", "30 g feta", "citroen en olijfolie"], 52, 30, 14, 470, "Gebruik de orzo die je maandag extra kookte."),
+      rauwHummus("15:30"),
+      M("Diner", "19:30", "Volkoren pasta met zalm, courgette en citroen", ["80 g volkoren pasta", "125 g zalmfilet", "courgette", "citroen, knoflook en dille"], 65, 34, 20, 580, "Roerbak de courgette kort, zo blijft-ie knapperig."),
+    ], dagtotaal_kcal: 1720 },
+
+  { dag: "Donderdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("blauwe bessen"),
+      fruit("10:30", "Halve granaatappel", ["1/2 granaatappel"], 18, 90),
+      M("Lunch", "12:30", "Kikkererwtensalade met geroosterde paprika, feta en munt", ["100 g kikkererwten", "geroosterde paprika", "30 g feta", "komkommer, rode ui en munt", "citroen en olijfolie"], 52, 16, 15, 460, "Snel klaar, en lekker fris."),
+      rauwFeta("15:30"),
+      M("Diner", "18:30", "Kip-traybake met pompoen, rode ui en bulgur", ["120 g kipfilet", "60 g bulgur", "pompoen en rode ui", "olijfolie, oregano en tijm"], 58, 34, 15, 540, "Alles tegelijk de oven in, ondertussen kook je de bulgur."),
+    ], dagtotaal_kcal: 1620 },
+
+  { dag: "Vrijdag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("aardbeien"),
+      fruit("10:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "12:30", "Linzensalade met tomaat, komkommer en feta", ["100 g linzen", "tomaat en komkommer", "30 g feta", "rode ui en peterselie", "citroen en olijfolie"], 55, 18, 13, 470, "Linzen zijn goedkoop, eiwitrijk en mediterraans."),
+      rauwFeta("15:30"),
+      M("Diner", "18:30", "Halloumi-traybake met courgette, paprika en couscous", ["60 g volkoren couscous", "80 g halloumi", "courgette, paprika en rode ui", "citroen, oregano en olijfolie"], 55, 24, 22, 520, "Een vrijdagavondtraktatie, en toch gezond."),
+    ], dagtotaal_kcal: 1610 },
+
+  { dag: "Zaterdag", type: "Trainingsdag", training: "Ochtendloop",
+    fueling: { voor: "Een uur voor je ochtendloop twee dadels of een snee brood met honing.", tijdens: "Water is genoeg op dit tempo.", na: "De lunch hieronder is meteen je herstel." },
+    maaltijden: [
+      oatsTrain("blauwe bessen"),
+      fruit("11:30", "Trosje druiven", ["trosje druiven"], 20, 90),
+      M("Lunch", "13:00", "Tonijn-rijstsalade met kikkererwten, tomaat en olijven", ["60 g zilvervliesrijst", "1 blik tonijn", "100 g kikkererwten", "tomaat, olijven en rode ui", "citroen en olijfolie"], 50, 30, 15, 480, "Stevige lunch na je ochtendloop."),
+      rauwFeta("16:00"),
+      M("Diner", "19:00", "Gegrilde zalm met geroosterde broccoli en couscous", ["125 g zalmfilet", "60 g volkoren couscous", "broccoli en rode ui", "citroen, dille en olijfolie"], 50, 34, 20, 560, "Rooster meteen wat extra groente voor zondag."),
+    ], dagtotaal_kcal: 1720 },
+
+  { dag: "Zondag", type: "Rustdag", training: "geen training",
+    maaltijden: [
+      oatsRust("blauwe bessen"),
+      fruit("11:30", "Sinaasappel", ["1 sinaasappel"], 18, 90),
+      M("Lunch", "13:00", "Mediterrane wrap met hummus, feta en geroosterde groente", ["2 volkoren wraps", "3 el hummus", "geroosterde groente van zaterdag", "30 g feta", "sla en citroen"], 56, 16, 16, 470, "Restjes geroosterde groente gaan er zo in."),
+      rauwHummus("16:00"),
+      M("Diner", "18:30", "Briam: geroosterde aubergine, courgette en aardappel met feta", ["aubergine, courgette en 200 g aardappel", "tomaat, ui en knoflook", "30 g feta", "olijfolie en oregano"], 50, 15, 18, 490, "Een Grieks ovengerecht, alles op een plaat."),
+    ], dagtotaal_kcal: 1590 },
+];
+const WEEK4_BOODSCHAPPEN = [
+  { categorie: "Groente & fruit", items: ["Tomaat", "Cherrytomaat", "Komkommer", "Worteltjes", "Courgette", "Paprika", "Aubergine", "Pompoen", "Rode biet", "Broccoli", "Spinazie", "Rode ui", "Ui", "Knoflook", "Citroen", "Aardbeien", "Blauwe bessen", "Sinaasappel", "Mandarijn", "Druiven", "Granaatappel", "Sla", "Verse peterselie", "Verse munt", "Verse dille"] },
+  { categorie: "Vlees, vis & eiwit", items: ["Kipfilet", "Kipgehakt", "Kabeljauwfilet", "Zalmfilet", "Tonijn uit blik", "Eieren", "Kikkererwten uit blik", "Witte bonen uit blik", "Linzen", "Halloumi", "Hummus"] },
+  { categorie: "Zuivel", items: ["Magere kwark", "Feta", "Parmezaan"] },
+  { categorie: "Granen & brood", items: ["Havermout", "Orzo", "Volkoren couscous", "Bulgur", "Zilvervliesrijst", "Volkoren pasta", "Volkoren wraps", "Volkorenbrood", "Aardappel"] },
+  { categorie: "Kast & kruiden", items: ["Olijfolie", "Olijven", "Tahin", "Tomatensaus (passata)", "Honing", "Dadels", "Kaneel", "Komijn", "Paprikapoeder", "Oregano", "Tijm", "Pompoenpitten"] },
+];
+const SCHEMA4 = Object.assign({}, SCHEMA, { dagen: WEEK4_DAGEN, boodschappenlijst: WEEK4_BOODSCHAPPEN });
+
+const WEKEN = [SCHEMA, SCHEMA2, SCHEMA3, SCHEMA4];
 
 /* ================================================================== *
  *  Veilige localStorage (alleen voortgang: afvinken & dagkeuze)
@@ -217,7 +372,7 @@ const WEKEN = [SCHEMA, SCHEMA2];
 const KEY_CHECK = CONFIG.storeKey + ".check"; // boodschappen afgevinkt
 const KEY_EATEN = CONFIG.storeKey + ".eaten"; // maaltijden afgevinkt per dag
 const KEY_DAY   = CONFIG.storeKey + ".day";   // gekozen dag in de tracker
-const KEY_WEEK  = CONFIG.storeKey + ".week";  // gekozen week (1 of 2)
+const KEY_WEEK  = CONFIG.storeKey + ".week";  // gekozen weekmenu (0 t/m 3)
 
 const store = {
   get(k, fallback = null) { try { const v = localStorage.getItem(k); return v == null ? fallback : v; } catch { return fallback; } },
@@ -289,8 +444,9 @@ function weekNumber(d = new Date()) {
 }
 let weekIdx = (() => {
   const saved = store.get(KEY_WEEK, null);
-  if (saved === "0" || saved === "1") return +saved;
-  return weekNumber() % 2; // even week -> week 1, oneven -> week 2
+  const n = +saved;
+  if (saved != null && Number.isInteger(n) && n >= 0 && n < WEKEN.length) return n;
+  return weekNumber() % WEKEN.length; // roteert automatisch door alle weekmenu's
 })();
 let ACTIVE = WEKEN[weekIdx] || WEKEN[0];
 
