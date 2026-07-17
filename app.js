@@ -1,10 +1,10 @@
 /* ================================================================== *
- *  bartlopen — Voedingscoach
+ *  bartlopen, Voedingscoach
  *  Vast weekmenu + interactieve tracker (afvinken, calorieën & macro's).
  *  Net als de hardloopapps: alles lokaal, geen server, geen sleutel.
  * ================================================================== */
 
-/* ========== INSTELLINGEN PER PERSOON — pas dit blok aan ==========
+/* ========== INSTELLINGEN PER PERSOON, pas dit blok aan ==========
    Hergebruik deze app voor iemand anders: kopieer de map, wijzig dit
    blok, vervang coach.jpg en pas het WEEKMENU hieronder aan.          */
 const CONFIG = {
@@ -33,7 +33,7 @@ const rauwFeta = (tijd) => M("Tussendoor", tijd, "Rauwkost met een blokje feta",
   ["komkommer, paprika en worteltjes", "20 g feta"], 8, 6, 9, 140, "Knapperig en hartig, precies genoeg.");
 
 /* ================================================================== *
- *  HET WEEKMENU — door coach Bart samengesteld
+ *  HET WEEKMENU, door coach Bart samengesteld
  *  Mediterraans, geen melk, geen banaan, allergieproof, weinig verspilling.
  * ================================================================== */
 const SCHEMA = {
@@ -568,7 +568,7 @@ function renderResult(s) {
       </section>`);
   }
 
-  /* Hele week volledig — alleen voor de print (zwart-wit op A4) */
+  /* Hele week volledig, alleen voor de print (zwart-wit op A4) */
   const printDays = dagen.map((d) => {
     const isTrain = isTrainDay(d);
     const cls = isTrain ? "day-train" : "day-rest";
@@ -815,7 +815,7 @@ function toast(msg) {
 /* ================================================================== *
  *  Init
  * ================================================================== */
-document.title = `${CONFIG.appName} — bartlopen Voedingscoach`;
+document.title = `${CONFIG.appName} · bartlopen Voedingscoach`;
 if ($("appName")) $("appName").textContent = CONFIG.appName;
 if ($("brandHandle")) $("brandHandle").textContent = CONFIG.coachHandle;
 if ($("footCredit")) $("footCredit").innerHTML = `Voeding door ${CONFIG.coachName} · TikTok <strong>${CONFIG.coachHandle}</strong> 🧡`;

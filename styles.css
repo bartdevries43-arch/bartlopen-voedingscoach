@@ -1,5 +1,5 @@
 /* ================================================================== *
- *  bartlopen — Voedingscoach · Magma-stijl, mobiel-eerst
+ *  bartlopen, Voedingscoach · Magma-stijl, mobiel-eerst
  *  Tweeling van de hardloopapps, maar gericht op eten.
  * ================================================================== */
 :root {
@@ -100,7 +100,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 @keyframes float { to { transform: translate(-14px, -10px) scale(1.1); } }
 .brand-logo { position: relative; display: block; height: 40px; width: auto; max-width: 80%; margin-bottom: 16px; }
 
-/* ---------- Hero (introscherm) — zelfde als de hardloopapps ---------- */
+/* ---------- Hero (introscherm), zelfde als de hardloopapps ---------- */
 .hero {
   position: relative; overflow: hidden;
   padding: 24px 22px; border-radius: var(--radius-xl); border: 1px solid var(--line);
@@ -442,7 +442,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .meal.eaten .meal-log { background: var(--dc, var(--volt)); color: var(--volt-ink); border-color: transparent; }
 .day-rest .meal.eaten .meal-log { color: #1c1024; }
 
-/* Print-only blok (beide dagen) — alleen zichtbaar bij printen */
+/* Print-only blok (beide dagen), alleen zichtbaar bij printen */
 .print-only { display: none; }
 .meal-tip::before { content: "💡 "; }
 .daytotal { text-align: right; margin: 4px 4px 0; color: var(--muted); font-size: 0.86rem; font-weight: 700; }
@@ -603,7 +603,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 }
 
 /* ================================================================== *
- *  PRINT — nuchter, zwart-wit, A4-leesbaar
+ *  PRINT, nuchter, zwart-wit, A4-leesbaar
  * ================================================================== */
 @media print {
   :root { color-scheme: light; }
