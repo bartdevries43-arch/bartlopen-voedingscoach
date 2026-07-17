@@ -68,10 +68,14 @@ h1, h2, h3, h4, p { margin-top: 0; }
 /* ---------- Topbar ---------- */
 .topbar {
   position: sticky; top: 0; z-index: 20;
-  display: grid; grid-template-columns: 1fr 46px; align-items: center; gap: 12px;
+  display: grid; grid-template-columns: 44px 1fr 46px; align-items: center; gap: 12px;
   padding: 12px 4px; margin-bottom: 10px;
   background: linear-gradient(180deg, var(--bg-1) 60%, transparent);
   backdrop-filter: saturate(160%) blur(12px);
+}
+.topbar-logo {
+  display: block; width: 44px; height: 44px; border-radius: 13px;
+  box-shadow: 0 8px 22px rgba(255, 45, 124, 0.18);
 }
 .topbar:has(#backButton:not(.hidden)) { grid-template-columns: 46px 1fr 46px; }
 .kicker {
@@ -98,7 +102,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   filter: blur(20px); animation: float 7s ease-in-out infinite alternate;
 }
 @keyframes float { to { transform: translate(-14px, -10px) scale(1.1); } }
-.brand-logo { position: relative; display: block; height: 40px; width: auto; max-width: 80%; margin-bottom: 16px; }
+.brand-logo { position: relative; display: block; height: 88px; width: 88px; max-width: 100%; border-radius: 22px; box-shadow: 0 14px 34px rgba(255, 45, 124, 0.16); margin-bottom: 14px; }
 
 /* ---------- Hero (introscherm), zelfde als de hardloopapps ---------- */
 .hero {
